@@ -4,11 +4,13 @@ go 1.21
 
 require (
 	github.com/Kucoin/kucoin-go-sdk v1.2.13
+	github.com/gateio/gateapi-go/v6 v6.60.1
 	github.com/linstohu/nexapi v1.0.0
 	github.com/shopspring/decimal v1.3.1
 )
 
 require (
+	github.com/antihax/optional v1.0.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator v9.31.0+incompatible // indirect
