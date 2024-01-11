@@ -7,6 +7,7 @@ require (
 	github.com/gateio/gateapi-go/v6 v6.60.1
 	github.com/linstohu/nexapi v1.0.0
 	github.com/shopspring/decimal v1.3.1
+	golang.org/x/sync v0.6.0
 )
 
 require (

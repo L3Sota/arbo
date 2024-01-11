@@ -1,6 +1,7 @@
 package arb
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/L3Sota/arbo/arb/model"
@@ -8,6 +9,7 @@ import (
 	"github.com/L3Sota/arbo/k"
 	"github.com/L3Sota/arbo/m"
 	"github.com/shopspring/decimal"
+	"golang.org/x/sync/errgroup"
 )
 
 var index = map[model.ExchangeType][]model.Order{}
@@ -34,13 +36,42 @@ var fees = map[model.ExchangeType]model.Fees{
 
 // + keep track of funding info to deposit/transfer/withdraw as necessary
 
-func Book() {
+func GatherBooks() ([]model.Order, []model.Order) {
 	ma, mb := m.M()
 	ka, kb := k.K()
 	ga, gb := g.G()
 
 	a := merge(true, ma, ka, ga)
 	b := merge(false, mb, kb, gb)
+
+	return a, b
+}
+
+func GatherBooksP() ([]model.Order, []model.Order) {
+	var ma, ka, ga, mb, kb, gb []model.Order
+	eg, _ := errgroup.WithContext(context.TODO())
+	eg.Go(func() error {
+		ma, mb = m.M()
+		return nil
+	})
+	eg.Go(func() error {
+		ka, kb = k.K()
+		return nil
+	})
+	eg.Go(func() error {
+		ga, gb = g.G()
+		return nil
+	})
+	eg.Wait()
+
+	a := merge(true, ma, ka, ga)
+	b := merge(false, mb, kb, gb)
+
+	return a, b
+}
+
+func Book() {
+	a, b := GatherBooksP()
 
 	fmt.Println("===")
 	for _, ask := range a {
