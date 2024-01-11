@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/L3Sota/arbo/arb/config"
 	"github.com/L3Sota/arbo/arb/model"
 	"github.com/L3Sota/arbo/g"
 	"github.com/L3Sota/arbo/k"
 	"github.com/L3Sota/arbo/m"
+	"github.com/gregdel/pushover"
 	"github.com/shopspring/decimal"
 	"golang.org/x/sync/errgroup"
 )
@@ -70,7 +72,7 @@ func GatherBooksP() ([]model.Order, []model.Order) {
 	return a, b
 }
 
-func Book() {
+func Book(c *config.Config) {
 	a, b := GatherBooksP()
 
 	fmt.Println("===")
@@ -156,10 +158,22 @@ func Book() {
 
 	profit := gain.Sub(withdrawUSDT).Sub(withdrawXCH.Mul(lastA))
 
-	// if profit.IsPositive() {
 	msg := fmt.Sprintf("Buy $ %v / Sell $ %v ; Asks %v - %v / Bids %v - %v ; trade %v XCH (g %v - %v XCH - %v USDT = p %v)",
 		totalBuyBase, totalSellBase, a[0].Price, lastA, b[0].Price, lastB, totalTradeQuote, gain, withdrawXCH, withdrawUSDT, profit)
 	fmt.Println(msg)
+
+	if profit.IsPositive() {
+		p := pushover.New(c.PKey)
+		r := pushover.NewRecipient(c.PUser)
+		resp, err := p.SendMessage(&pushover.Message{
+			Message: msg,
+		}, r)
+		if err != nil {
+			fmt.Print(err)
+			return
+		}
+		fmt.Println(resp.String())
+	}
 }
 
 func merge(asc bool, xs ...[]model.Order) []model.Order {
