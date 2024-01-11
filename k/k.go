@@ -31,6 +31,7 @@ func K() ([]model.Order, []model.Order) {
 	a := make([]model.Order, 0, len(k.Asks))
 	for _, ka := range k.Asks {
 		a = append(a, model.Order{
+			Ex:     model.Ku,
 			Price:  decimal.RequireFromString(ka[0]),
 			Amount: decimal.RequireFromString(ka[1]),
 		})
@@ -38,6 +39,7 @@ func K() ([]model.Order, []model.Order) {
 	b := make([]model.Order, 0, len(k.Bids))
 	for _, kb := range k.Bids {
 		b = append(b, model.Order{
+			Ex:     model.Ku,
 			Price:  decimal.RequireFromString(kb[0]),
 			Amount: decimal.RequireFromString(kb[1]),
 		})

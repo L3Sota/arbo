@@ -38,11 +38,11 @@ func Book() {
 
 	fmt.Println("===")
 	for _, ask := range a {
-		fmt.Println(ask.Price.StringFixed(2), ask.Amount.String())
+		fmt.Println(ask.Ex, ask.Price.StringFixed(2), ask.Amount.String())
 	}
 	fmt.Println("---")
 	for _, bid := range b {
-		fmt.Println(bid.Price.StringFixed(2), bid.Amount.String())
+		fmt.Println(bid.Ex, bid.Price.StringFixed(2), bid.Amount.String())
 	}
 	fmt.Println("===")
 

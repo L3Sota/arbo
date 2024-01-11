@@ -32,6 +32,7 @@ func M() ([]model.Order, []model.Order) {
 	a := make([]model.Order, 0, len(o.Asks))
 	for _, ka := range o.Asks {
 		a = append(a, model.Order{
+			Ex:     model.ME,
 			Price:  decimal.RequireFromString(ka[0]),
 			Amount: decimal.RequireFromString(ka[1]),
 		})
@@ -39,6 +40,7 @@ func M() ([]model.Order, []model.Order) {
 	b := make([]model.Order, 0, len(o.Bids))
 	for _, kb := range o.Bids {
 		b = append(b, model.Order{
+			Ex:     model.ME,
 			Price:  decimal.RequireFromString(kb[0]),
 			Amount: decimal.RequireFromString(kb[1]),
 		})

@@ -33,6 +33,7 @@ func G() ([]model.Order, []model.Order) {
 	a := make([]model.Order, 0, len(result.Asks))
 	for _, ask := range result.Asks {
 		a = append(a, model.Order{
+			Ex:     model.Ga,
 			Price:  decimal.RequireFromString(ask[0]),
 			Amount: decimal.RequireFromString(ask[1]),
 		})
@@ -40,6 +41,7 @@ func G() ([]model.Order, []model.Order) {
 	b := make([]model.Order, 0, len(result.Bids))
 	for _, bid := range result.Bids {
 		b = append(b, model.Order{
+			Ex:     model.Ga,
 			Price:  decimal.RequireFromString(bid[0]),
 			Amount: decimal.RequireFromString(bid[1]),
 		})
