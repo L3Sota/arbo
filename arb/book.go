@@ -36,13 +36,15 @@ func Book() {
 	a := merge(true, ma, ka, ga)
 	b := merge(false, mb, kb, gb)
 
-	for i, ask := range a {
-		fmt.Println(i, ask.Price.StringFixed(2), ask.Amount.String())
+	fmt.Println("===")
+	for _, ask := range a {
+		fmt.Println(ask.Price.StringFixed(2), ask.Amount.String())
 	}
 	fmt.Println("---")
-	for i, bid := range b {
-		fmt.Println(i, bid.Price.StringFixed(2), bid.Amount.String())
+	for _, bid := range b {
+		fmt.Println(bid.Price.StringFixed(2), bid.Amount.String())
 	}
+	fmt.Println("===")
 
 	if a[0].Price.LessThan(b[0].Price) {
 		msg := fmt.Sprintf("%v (%v) < %v (%v)", a[0].Price.String(), a[0].Amount.String(), b[0].Price.String(), b[0].Amount.String())
