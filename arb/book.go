@@ -53,8 +53,12 @@ func Book() {
 	lastA := a[0].Price
 	lastB := b[0].Price
 	totalTradeQuote := decimal.Zero
-	totalBuyBase := decimal.Zero
-	totalSellBase := decimal.Zero
+	totalBuyBase := make(map[model.ExchangeType]decimal.Decimal, len(model.ExchangeTypes))
+	totalSellBase := make(map[model.ExchangeType]decimal.Decimal, len(model.ExchangeTypes))
+	for _, t := range model.ExchangeTypes {
+		totalBuyBase[t] = decimal.Zero
+		totalSellBase[t] = decimal.Zero
+	}
 	profit := decimal.Zero
 	// buy into the low asks, sell off to the high bids
 	for {

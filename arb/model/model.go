@@ -14,6 +14,8 @@ const (
 	Ga
 )
 
+var ExchangeTypes = [5]ExchangeType{ME, Ku, Hu, Co, Ga}
+
 func (e ExchangeType) String() string {
 	switch e {
 	case ME:
