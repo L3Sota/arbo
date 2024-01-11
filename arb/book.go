@@ -46,10 +46,61 @@ func Book() {
 	}
 	fmt.Println("===")
 
-	if a[0].Price.LessThan(b[0].Price) {
-		msg := fmt.Sprintf("%v (%v) < %v (%v)", a[0].Price.String(), a[0].Amount.String(), b[0].Price.String(), b[0].Amount.String())
-		fmt.Println(msg)
+	ai := 0
+	bi := 0
+	aAmount := a[ai].Amount
+	bAmount := b[bi].Amount
+	lastA := a[0].Price
+	lastB := b[0].Price
+	totalTradeQuote := decimal.Zero
+	totalBuyBase := decimal.Zero
+	totalSellBase := decimal.Zero
+	profit := decimal.Zero
+	// buy into the low asks, sell off to the high bids
+	for {
+		ap := a[ai].Price
+		bp := b[bi].Price
+		if ap.GreaterThanOrEqual(bp) {
+			break
+		}
+
+		aa := a[ai].Amount
+		ae := a[ai].Ex
+		ba := b[bi].Amount
+		be := b[bi].Ex
+
+		tradeAmount := decimal.Zero
+		switch aAmount.Cmp(bAmount) {
+		case -1:
+			tradeAmount = aAmount
+			bAmount = bAmount.Sub(tradeAmount)
+			lastA = ap
+			ai++
+			aAmount = aa
+		case 1:
+			tradeAmount = bAmount
+			aAmount = aAmount.Sub(tradeAmount)
+			lastB = bp
+			bi++
+			bAmount = ba
+		case 0:
+			tradeAmount = aAmount
+			lastA = ap
+			lastB = bp
+			ai++
+			bi++
+			aAmount = aa
+			bAmount = ba
+		}
+		totalTradeQuote = totalTradeQuote.Add(tradeAmount)
+		profit = profit.Add(tradeAmount.Mul(bp.Sub(ap)))
+		totalBuyBase[ae] = totalBuyBase[ae].Add(ap.Mul(tradeAmount))
+		totalSellBase[be] = totalSellBase[be].Add(bp.Mul(tradeAmount))
 	}
+
+	msg := fmt.Sprintf("Buy $ %v / Sell $ %v ; Asks %v - %v / Bids %v - %v ; amount %v XCH (p %v)",
+		totalBuyBase, totalSellBase, a[0].Price, lastA, b[0].Price, lastB, totalTradeQuote, profit)
+	fmt.Println(msg)
 }
 
 func merge(asc bool, xs ...[]model.Order) []model.Order {
