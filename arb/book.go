@@ -13,6 +13,12 @@ import (
 var index = map[model.ExchangeType][]model.Order{}
 var book = []model.Order{}
 
+var fees = map[model.ExchangeType]model.Fees{
+	model.ME: m.Fees,
+	model.Ku: k.Fees,
+	model.Ga: g.Fees,
+}
+
 // gather price information from all exchanges
 // REST to get initial book state
 // WS to get streaming updates
@@ -38,11 +44,11 @@ func Book() {
 
 	fmt.Println("===")
 	for _, ask := range a {
-		fmt.Println(ask.Ex, ask.Price.StringFixed(2), ask.Amount.String())
+		fmt.Println(ask.Ex, ask.EffectivePrice.StringFixed(2), ask.Price.StringFixed(2), ask.Amount.String())
 	}
 	fmt.Println("---")
 	for _, bid := range b {
-		fmt.Println(bid.Ex, bid.Price.StringFixed(2), bid.Amount.String())
+		fmt.Println(bid.Ex, bid.EffectivePrice.StringFixed(2), bid.Price.StringFixed(2), bid.Amount.String())
 	}
 	fmt.Println("===")
 
@@ -59,7 +65,7 @@ func Book() {
 		totalBuyBase[t] = decimal.Zero
 		totalSellBase[t] = decimal.Zero
 	}
-	profit := decimal.Zero
+	gain := decimal.Zero
 	// buy into the low asks, sell off to the high bids
 	for {
 		ap := a[ai].Price
@@ -97,13 +103,31 @@ func Book() {
 			bAmount = ba
 		}
 		totalTradeQuote = totalTradeQuote.Add(tradeAmount)
-		profit = profit.Add(tradeAmount.Mul(bp.Sub(ap)))
+		gain = gain.Add(tradeAmount.Mul(bp.Sub(ap)))
 		totalBuyBase[ae] = totalBuyBase[ae].Add(ap.Mul(tradeAmount))
 		totalSellBase[be] = totalSellBase[be].Add(bp.Mul(tradeAmount))
 	}
 
-	msg := fmt.Sprintf("Buy $ %v / Sell $ %v ; Asks %v - %v / Bids %v - %v ; amount %v XCH (p %v)",
-		totalBuyBase, totalSellBase, a[0].Price, lastA, b[0].Price, lastB, totalTradeQuote, profit)
+	// buy XCH -> withdraw XCH
+	withdrawXCH := decimal.Zero
+	for e, b := range totalBuyBase {
+		if b.IsPositive() {
+			withdrawXCH = withdrawXCH.Add(fees[e].WithdrawalFlatXCH)
+		}
+	}
+	// sell XCH -> withdraw USDT
+	withdrawUSDT := decimal.Zero
+	for e, s := range totalSellBase {
+		if s.IsPositive() {
+			withdrawUSDT = withdrawUSDT.Add(fees[e].WithdrawalFlatUSDT)
+		}
+	}
+
+	profit := gain.Sub(withdrawUSDT).Sub(withdrawXCH.Mul(lastA))
+
+	// if profit.IsPositive() {
+	msg := fmt.Sprintf("Buy $ %v / Sell $ %v ; Asks %v - %v / Bids %v - %v ; trade %v XCH (g %v - %v XCH - %v USDT = p %v)",
+		totalBuyBase, totalSellBase, a[0].Price, lastA, b[0].Price, lastB, totalTradeQuote, gain, withdrawXCH, withdrawUSDT, profit)
 	fmt.Println(msg)
 }
 

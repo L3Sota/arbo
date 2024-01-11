@@ -8,6 +8,16 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+var (
+	Fees = model.Fees{
+		MakerTakerRatio:    decimal.RequireFromString("0.001"), // 0.1%
+		WithdrawalFlatXCH:  decimal.RequireFromString("0.132"),
+		WithdrawalFlatUSDT: decimal.RequireFromString("0.8"), // SOL
+	}
+	AskAddition  = decimal.NewFromInt(1).Add(Fees.MakerTakerRatio)
+	BidReduction = decimal.NewFromInt(1).Sub(Fees.MakerTakerRatio)
+)
+
 func K() ([]model.Order, []model.Order) {
 	s := kucoin.NewApiService()
 
@@ -17,32 +27,36 @@ func K() ([]model.Order, []model.Order) {
 		return nil, nil
 	}
 
-	var k struct {
+	var o struct {
 		Time     int64
 		Sequence string
 		Asks     [][]string
 		Bids     [][]string
 	}
-	if err := resp.ReadData(&k); err != nil {
+	if err := resp.ReadData(&o); err != nil {
 		fmt.Print(err)
 		return nil, nil
 	}
 
-	a := make([]model.Order, 0, len(k.Asks))
-	for _, ka := range k.Asks {
-		a = append(a, model.Order{
+	a := make([]model.Order, 0, len(o.Asks))
+	for _, ask := range o.Asks {
+		o := model.Order{
 			Ex:     model.Ku,
-			Price:  decimal.RequireFromString(ka[0]),
-			Amount: decimal.RequireFromString(ka[1]),
-		})
+			Price:  decimal.RequireFromString(ask[0]),
+			Amount: decimal.RequireFromString(ask[1]),
+		}
+		o.EffectivePrice = o.Price.Mul(AskAddition).RoundUp(2)
+		a = append(a, o)
 	}
-	b := make([]model.Order, 0, len(k.Bids))
-	for _, kb := range k.Bids {
-		b = append(b, model.Order{
+	b := make([]model.Order, 0, len(o.Bids))
+	for _, bid := range o.Bids {
+		o := model.Order{
 			Ex:     model.Ku,
-			Price:  decimal.RequireFromString(kb[0]),
-			Amount: decimal.RequireFromString(kb[1]),
-		})
+			Price:  decimal.RequireFromString(bid[0]),
+			Amount: decimal.RequireFromString(bid[1]),
+		}
+		o.EffectivePrice = o.Price.Mul(BidReduction).RoundDown(2)
+		b = append(b, o)
 	}
 
 	return a, b

@@ -34,7 +34,14 @@ func (e ExchangeType) String() string {
 }
 
 type Order struct {
-	Ex     ExchangeType
-	Price  decimal.Decimal
-	Amount decimal.Decimal
+	Ex             ExchangeType
+	Price          decimal.Decimal
+	EffectivePrice decimal.Decimal
+	Amount         decimal.Decimal
+}
+
+type Fees struct {
+	MakerTakerRatio    decimal.Decimal
+	WithdrawalFlatXCH  decimal.Decimal
+	WithdrawalFlatUSDT decimal.Decimal
 }
