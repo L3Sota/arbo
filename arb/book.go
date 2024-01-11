@@ -4,8 +4,10 @@ import (
 	"fmt"
 
 	"github.com/L3Sota/arbo/arb/model"
+	"github.com/L3Sota/arbo/g"
 	"github.com/L3Sota/arbo/k"
 	"github.com/L3Sota/arbo/m"
+	"github.com/shopspring/decimal"
 )
 
 var index = map[model.ExchangeType][]model.Order{}
@@ -29,9 +31,10 @@ var book = []model.Order{}
 func Book() {
 	ma, mb := m.M()
 	ka, kb := k.K()
+	ga, gb := g.G()
 
-	a := merge(ma, ka, true)
-	b := merge(mb, kb, false)
+	a := merge(true, ma, ka, ga)
+	b := merge(false, mb, kb, gb)
 
 	for i, ask := range a {
 		fmt.Println(i, ask.Price.StringFixed(2), ask.Amount.String())
@@ -47,36 +50,33 @@ func Book() {
 	}
 }
 
-func merge(x, y []model.Order, asc bool) []model.Order {
-	m := make([]model.Order, 0, len(x)+len(y))
-	i := 0
-	j := 0
-	for {
-		if i == len(x) {
-			m = append(m, y[j:]...)
-			return m
-		}
-		if j == len(y) {
-			m = append(m, x[i:]...)
-			return m
-		}
+func merge(asc bool, xs ...[]model.Order) []model.Order {
+	wheres := make([]int, len(xs))
+	s := 0
+	for _, x := range xs {
+		s += len(x)
+	}
+	m := make([]model.Order, 0, s)
 
-		if asc {
-			if x[i].Price.LessThan(y[j].Price) {
-				m = append(m, x[i])
-				i++
-			} else {
-				m = append(m, y[j])
-				j++
-			}
-		} else {
-			if x[i].Price.GreaterThan(y[j].Price) {
-				m = append(m, x[i])
-				i++
-			} else {
-				m = append(m, y[j])
-				j++
+	for {
+		which := -1
+		where := -1
+		best := decimal.Zero
+		for i, j := range wheres {
+			switch {
+			case j == len(xs[i]):
+			case which == -1,
+				asc && xs[i][j].Price.LessThan(best),
+				!asc && xs[i][j].Price.GreaterThan(best):
+				which = i
+				where = j
+				best = xs[i][j].Price
 			}
 		}
+		if which == -1 {
+			return m
+		}
+		m = append(m, xs[which][where])
+		wheres[which]++
 	}
 }
