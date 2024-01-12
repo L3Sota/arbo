@@ -23,3 +23,8 @@ go.work
 # my additions below
 ## direnv
 /.envrc
+
+## exec
+/main
+/io.github.l3sota.arbo.sh
+/io.github.l3sota.arbo.plist
