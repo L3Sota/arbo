@@ -6,6 +6,7 @@ import (
 
 	"github.com/L3Sota/arbo/arb/config"
 	"github.com/L3Sota/arbo/arb/model"
+	"github.com/L3Sota/arbo/c"
 	"github.com/L3Sota/arbo/g"
 	"github.com/L3Sota/arbo/k"
 	"github.com/L3Sota/arbo/m"
@@ -21,6 +22,7 @@ var fees = map[model.ExchangeType]model.Fees{
 	model.ME: m.Fees,
 	model.Ku: k.Fees,
 	model.Ga: g.Fees,
+	model.Co: c.Fees,
 }
 
 // gather price information from all exchanges
@@ -42,15 +44,16 @@ func GatherBooks() ([]model.Order, []model.Order) {
 	ma, mb := m.M()
 	ka, kb := k.K()
 	ga, gb := g.G()
+	ca, cb := c.C()
 
-	a := merge(true, ma, ka, ga)
-	b := merge(false, mb, kb, gb)
+	a := merge(true, ma, ka, ga, ca)
+	b := merge(false, mb, kb, gb, cb)
 
 	return a, b
 }
 
 func GatherBooksP() ([]model.Order, []model.Order) {
-	var ma, ka, ga, mb, kb, gb []model.Order
+	var ma, ka, ga, ca, mb, kb, gb, cb []model.Order
 	eg, _ := errgroup.WithContext(context.TODO())
 	eg.Go(func() error {
 		ma, mb = m.M()
@@ -64,10 +67,14 @@ func GatherBooksP() ([]model.Order, []model.Order) {
 		ga, gb = g.G()
 		return nil
 	})
+	eg.Go(func() error {
+		ca, cb = c.C()
+		return nil
+	})
 	eg.Wait()
 
-	a := merge(true, ma, ka, ga)
-	b := merge(false, mb, kb, gb)
+	a := merge(true, ma, ka, ga, ca)
+	b := merge(false, mb, kb, gb, cb)
 
 	return a, b
 }

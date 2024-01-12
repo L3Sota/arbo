@@ -10,6 +10,7 @@ require (
 	github.com/linstohu/nexapi v1.0.0
 	github.com/shopspring/decimal v1.3.1
 	golang.org/x/sync v0.6.0
+	gopkg.in/resty.v1 v1.12.0
 )
 
 require (
@@ -24,5 +25,6 @@ require (
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/sirupsen/logrus v1.4.1 // indirect
 	github.com/valyala/fastjson v1.6.4 // indirect
+	golang.org/x/net v0.0.0-20181220203305-927f97764cc3 // indirect
 	golang.org/x/sys v0.7.0 // indirect
 )
