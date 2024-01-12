@@ -82,16 +82,6 @@ func GatherBooksP() ([]model.Order, []model.Order) {
 func Book(c *config.Config) {
 	a, b := GatherBooksP()
 
-	fmt.Println("===")
-	for _, ask := range a {
-		fmt.Println(ask.Ex, ask.EffectivePrice.StringFixed(2), ask.Price.StringFixed(2), ask.Amount.String())
-	}
-	fmt.Println("---")
-	for _, bid := range b {
-		fmt.Println(bid.Ex, bid.EffectivePrice.StringFixed(2), bid.Price.StringFixed(2), bid.Amount.String())
-	}
-	fmt.Println("===")
-
 	ai := 0
 	bi := 0
 	aAmount := a[ai].Amount
@@ -167,7 +157,6 @@ func Book(c *config.Config) {
 
 	msg := fmt.Sprintf("Buy $ %v / Sell $ %v ; Asks %v - %v / Bids %v - %v ; trade %v XCH (g %v - %v XCH - %v USDT = p %v)",
 		totalBuyBase, totalSellBase, a[0].Price, lastA, b[0].Price, lastB, totalTradeQuote, gain, withdrawXCH, withdrawUSDT, profit)
-	fmt.Println(msg)
 
 	if profit.IsPositive() && c.PEnable {
 		p := pushover.New(c.PKey)
@@ -181,6 +170,23 @@ func Book(c *config.Config) {
 		}
 		fmt.Println(resp.String())
 	}
+
+	fmt.Println("===")
+	for i, ask := range a {
+		if i > ai+5 {
+			break
+		}
+		fmt.Println(ask.Ex, ask.EffectivePrice.StringFixed(2), ask.Price.StringFixed(2), ask.Amount.String())
+	}
+	fmt.Println("---")
+	for i, bid := range b {
+		if i > ai+5 {
+			break
+		}
+		fmt.Println(bid.Ex, bid.EffectivePrice.StringFixed(2), bid.Price.StringFixed(2), bid.Amount.String())
+	}
+	fmt.Println("===")
+	fmt.Println(msg)
 }
 
 func merge(asc bool, xs ...[]model.Order) []model.Order {
