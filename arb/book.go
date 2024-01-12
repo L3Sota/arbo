@@ -199,11 +199,11 @@ func merge(asc bool, xs ...[]model.Order) []model.Order {
 			switch {
 			case j == len(xs[i]):
 			case which == -1,
-				asc && xs[i][j].Price.LessThan(best),
-				!asc && xs[i][j].Price.GreaterThan(best):
+				asc && xs[i][j].EffectivePrice.LessThan(best),
+				!asc && xs[i][j].EffectivePrice.GreaterThan(best):
 				which = i
 				where = j
-				best = xs[i][j].Price
+				best = xs[i][j].EffectivePrice
 			}
 		}
 		if which == -1 {
