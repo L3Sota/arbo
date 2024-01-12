@@ -169,7 +169,7 @@ func Book(c *config.Config) {
 		totalBuyBase, totalSellBase, a[0].Price, lastA, b[0].Price, lastB, totalTradeQuote, gain, withdrawXCH, withdrawUSDT, profit)
 	fmt.Println(msg)
 
-	if profit.IsPositive() {
+	if profit.IsPositive() && c.PEnable {
 		p := pushover.New(c.PKey)
 		r := pushover.NewRecipient(c.PUser)
 		resp, err := p.SendMessage(&pushover.Message{

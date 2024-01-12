@@ -1,6 +1,7 @@
 package config
 
 type Config struct {
-	PKey  string `split_words:"true"`
-	PUser string `split_words:"true"`
+	PEnable bool   `split_words:"true"`
+	PKey    string `split_words:"true"`
+	PUser   string `split_words:"true"`
 }
