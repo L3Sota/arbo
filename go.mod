@@ -5,6 +5,7 @@ go 1.21
 require (
 	github.com/Kucoin/kucoin-go-sdk v1.2.13
 	github.com/gateio/gateapi-go/v6 v6.60.1
+	github.com/google/uuid v1.5.0
 	github.com/gregdel/pushover v1.3.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/linstohu/nexapi v1.0.0

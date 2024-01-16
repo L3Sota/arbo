@@ -7,6 +7,10 @@ type Config struct {
 	PKey    string `split_words:"true"`
 	PUser   string `split_words:"true"`
 
+	KKey  string `split_words:"true"`
+	KSec  string `split_words:"true"`
+	KPass string `split_words:"true"`
+
 	loaded bool
 }
 
