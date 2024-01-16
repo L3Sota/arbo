@@ -27,12 +27,7 @@ func K() ([]model.Order, []model.Order) {
 		return nil, nil
 	}
 
-	var o struct {
-		Time     int64
-		Sequence string
-		Asks     [][]string
-		Bids     [][]string
-	}
+	var o kucoin.PartOrderBookModel
 	if err := resp.ReadData(&o); err != nil {
 		fmt.Print(err)
 		return nil, nil
