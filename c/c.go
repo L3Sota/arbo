@@ -27,7 +27,7 @@ type book struct {
 	Bids [][]string
 }
 
-func C() ([]model.Order, []model.Order) {
+func Book() ([]model.Order, []model.Order) {
 	client := resty.New()
 
 	resp, err := client.R().Get("https://api.coinex.com/v1/market/depth?market=XCHUSDT&merge=0.01&limit=50")

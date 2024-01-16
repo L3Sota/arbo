@@ -19,7 +19,7 @@ var (
 	BidReduction = decimal.NewFromInt(1).Sub(Fees.MakerTakerRatio)
 )
 
-func G() ([]model.Order, []model.Order) {
+func Book() ([]model.Order, []model.Order) {
 	client := gateapi.NewAPIClient(gateapi.NewConfiguration())
 	// uncomment the next line if your are testing against testnet
 	// client.ChangeBasePath("https://fx-api-testnet.gateio.ws/api/v4")

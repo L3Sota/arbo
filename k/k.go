@@ -18,7 +18,7 @@ var (
 	BidReduction = decimal.NewFromInt(1).Sub(Fees.MakerTakerRatio)
 )
 
-func K() ([]model.Order, []model.Order) {
+func Book() ([]model.Order, []model.Order) {
 	s := kucoin.NewApiService()
 
 	resp, err := s.AggregatedPartOrderBook("XCH-USDT", 100)

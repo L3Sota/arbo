@@ -22,7 +22,7 @@ var (
 	BidReduction = decimal.NewFromInt(1).Sub(Fees.MakerTakerRatio)
 )
 
-func M() ([]model.Order, []model.Order) {
+func Book() ([]model.Order, []model.Order) {
 	nex, err := marketdata.NewSpotMarketDataClient(&spotutils.SpotClientCfg{
 		BaseURL: "https://api.mexc.com/",
 		Logger:  slog.Default(),

@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	a, b := g.G()
+	a, b := g.Book()
 
 	fmt.Print(a)
 	fmt.Print(b)

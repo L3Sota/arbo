@@ -41,10 +41,10 @@ var fees = map[model.ExchangeType]model.Fees{
 // + keep track of funding info to deposit/transfer/withdraw as necessary
 
 func GatherBooks() ([]model.Order, []model.Order) {
-	ma, mb := m.M()
-	ka, kb := k.K()
-	ga, gb := g.G()
-	ca, cb := c.C()
+	ma, mb := m.Book()
+	ka, kb := k.Book()
+	ga, gb := g.Book()
+	ca, cb := c.Book()
 
 	a := merge(true, ma, ka, ga, ca)
 	b := merge(false, mb, kb, gb, cb)
@@ -56,19 +56,19 @@ func GatherBooksP() ([]model.Order, []model.Order) {
 	var ma, ka, ga, ca, mb, kb, gb, cb []model.Order
 	eg, _ := errgroup.WithContext(context.TODO())
 	eg.Go(func() error {
-		ma, mb = m.M()
+		ma, mb = m.Book()
 		return nil
 	})
 	eg.Go(func() error {
-		ka, kb = k.K()
+		ka, kb = k.Book()
 		return nil
 	})
 	eg.Go(func() error {
-		ga, gb = g.G()
+		ga, gb = g.Book()
 		return nil
 	})
 	eg.Go(func() error {
-		ca, cb = c.C()
+		ca, cb = c.Book()
 		return nil
 	})
 	eg.Wait()

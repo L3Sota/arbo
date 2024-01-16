@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	a, b := k.K()
+	a, b := k.Book()
 
 	fmt.Print(a)
 	fmt.Print(b)
