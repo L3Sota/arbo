@@ -180,7 +180,7 @@ func Book(c *config.Config) {
 	}
 	fmt.Println("---")
 	for i, bid := range b {
-		if i > ai+5 {
+		if i > bi+5 {
 			break
 		}
 		fmt.Println(bid.Ex, bid.EffectivePrice.StringFixed(2), bid.Price.StringFixed(2), bid.Amount.String())
