@@ -7,7 +7,7 @@ import (
 type ExchangeType uint8
 
 const (
-	ME = iota
+	ME ExchangeType = iota
 	Ku
 	Hu
 	Co
