@@ -9,6 +9,6 @@ import (
 func main() {
 	a, b := m.Book()
 
-	fmt.Print(a)
-	fmt.Print(b)
+	fmt.Println(a)
+	fmt.Println(b)
 }
