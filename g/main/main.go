@@ -7,8 +7,13 @@ import (
 )
 
 func main() {
-	a, b := g.Book()
+	book()
+}
 
-	fmt.Print(a)
-	fmt.Print(b)
+func book() {
+	a, b, err := g.Book()
+
+	fmt.Println(a)
+	fmt.Println(b)
+	fmt.Println(err)
 }

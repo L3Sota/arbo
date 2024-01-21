@@ -7,8 +7,13 @@ import (
 )
 
 func main() {
-	a, b := k.Book()
+	book()
+}
+
+func book() {
+	a, b, err := k.Book()
 
 	fmt.Print(a)
 	fmt.Print(b)
+	fmt.Print(err)
 }

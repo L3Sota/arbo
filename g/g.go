@@ -19,7 +19,7 @@ var (
 	BidReduction = decimal.NewFromInt(1).Sub(Fees.MakerTakerRatio)
 )
 
-func Book() ([]model.Order, []model.Order) {
+func Book() ([]model.Order, []model.Order, error) {
 	client := gateapi.NewAPIClient(gateapi.NewConfiguration())
 	// uncomment the next line if your are testing against testnet
 	// client.ChangeBasePath("https://fx-api-testnet.gateio.ws/api/v4")
@@ -38,7 +38,7 @@ func Book() ([]model.Order, []model.Order) {
 		} else {
 			fmt.Printf("generic error: %s\n", err.Error())
 		}
-		return nil, nil
+		return nil, nil, err
 	}
 
 	a := make([]model.Order, 0, len(o.Asks))
@@ -62,5 +62,5 @@ func Book() ([]model.Order, []model.Order) {
 		b = append(b, o)
 	}
 
-	return a, b
+	return a, b, nil
 }

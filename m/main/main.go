@@ -7,8 +7,9 @@ import (
 )
 
 func main() {
-	a, b := m.Book()
+	a, b, err := m.Book()
 
 	fmt.Println(a)
 	fmt.Println(b)
+	fmt.Println(err)
 }

@@ -2,7 +2,6 @@ package c
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/L3Sota/arbo/arb/model"
 	"github.com/shopspring/decimal"
@@ -27,13 +26,12 @@ type book struct {
 	Bids [][]string
 }
 
-func Book() ([]model.Order, []model.Order) {
+func Book() ([]model.Order, []model.Order, error) {
 	client := resty.New()
 
 	resp, err := client.R().Get("https://api.coinex.com/v1/market/depth?market=XCHUSDT&merge=0.01&limit=50")
 	if err != nil {
-		fmt.Println(err)
-		return nil, nil
+		return nil, nil, err
 	}
 
 	raw := &struct {
@@ -41,8 +39,7 @@ func Book() ([]model.Order, []model.Order) {
 	}{}
 
 	if err := json.Unmarshal(resp.Body(), raw); err != nil {
-		fmt.Println(err)
-		return nil, nil
+		return nil, nil, err
 	}
 
 	o := raw.Data
@@ -68,5 +65,5 @@ func Book() ([]model.Order, []model.Order) {
 		b = append(b, o)
 	}
 
-	return a, b
+	return a, b, nil
 }

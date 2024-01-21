@@ -41,10 +41,22 @@ var fees = map[model.ExchangeType]model.Fees{
 // + keep track of funding info to deposit/transfer/withdraw as necessary
 
 func GatherBooks() ([]model.Order, []model.Order) {
-	ma, mb := m.Book()
-	ka, kb := k.Book()
-	ga, gb := g.Book()
-	ca, cb := c.Book()
+	ma, mb, err := m.Book()
+	if err != nil {
+		return nil, nil
+	}
+	ka, kb, err := k.Book()
+	if err != nil {
+		return nil, nil
+	}
+	ga, gb, err := g.Book()
+	if err != nil {
+		return nil, nil
+	}
+	ca, cb, err := c.Book()
+	if err != nil {
+		return nil, nil
+	}
 
 	a := merge(true, ma, ka, ga, ca)
 	b := merge(false, mb, kb, gb, cb)
@@ -54,24 +66,47 @@ func GatherBooks() ([]model.Order, []model.Order) {
 
 func GatherBooksP() ([]model.Order, []model.Order) {
 	var ma, ka, ga, ca, mb, kb, gb, cb []model.Order
-	eg, _ := errgroup.WithContext(context.TODO())
+	eg, _ := errgroup.WithContext(context.Background())
 	eg.Go(func() error {
-		ma, mb = m.Book()
+		a, b, err := m.Book()
+		if err != nil {
+			return err
+		}
+		ma = a
+		mb = b
 		return nil
 	})
 	eg.Go(func() error {
-		ka, kb = k.Book()
+		a, b, err := k.Book()
+		if err != nil {
+			return err
+		}
+		ka = a
+		kb = b
 		return nil
 	})
 	eg.Go(func() error {
-		ga, gb = g.Book()
+		a, b, err := g.Book()
+		if err != nil {
+			return err
+		}
+		ga = a
+		gb = b
 		return nil
 	})
 	eg.Go(func() error {
-		ca, cb = c.Book()
+		a, b, err := c.Book()
+		if err != nil {
+			return err
+		}
+		ca = a
+		cb = b
 		return nil
 	})
-	eg.Wait()
+	if err := eg.Wait(); err != nil {
+		fmt.Println(err)
+		return nil, nil
+	}
 
 	a := merge(true, ma, ka, ga, ca)
 	b := merge(false, mb, kb, gb, cb)

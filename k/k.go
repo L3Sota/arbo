@@ -1,8 +1,6 @@
 package k
 
 import (
-	"fmt"
-
 	"github.com/Kucoin/kucoin-go-sdk"
 	"github.com/L3Sota/arbo/arb/model"
 	"github.com/shopspring/decimal"
@@ -18,19 +16,17 @@ var (
 	BidReduction = decimal.NewFromInt(1).Sub(Fees.MakerTakerRatio)
 )
 
-func Book() ([]model.Order, []model.Order) {
+func Book() ([]model.Order, []model.Order, error) {
 	s := kucoin.NewApiService()
 
 	resp, err := s.AggregatedPartOrderBook("XCH-USDT", 100)
 	if err != nil {
-		fmt.Print(err)
-		return nil, nil
+		return nil, nil, err
 	}
 
 	var o kucoin.PartOrderBookModel
 	if err := resp.ReadData(&o); err != nil {
-		fmt.Print(err)
-		return nil, nil
+		return nil, nil, err
 	}
 
 	a := make([]model.Order, 0, len(o.Asks))
@@ -54,5 +50,5 @@ func Book() ([]model.Order, []model.Order) {
 		b = append(b, o)
 	}
 
-	return a, b
+	return a, b, nil
 }
