@@ -6,5 +6,6 @@ import (
 )
 
 func main() {
+	// arb.GatherBalancesP(config.Load())
 	arb.Book(config.Load())
 }

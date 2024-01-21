@@ -40,7 +40,7 @@ func Book() ([]model.Order, []model.Order, error) {
 			Price:  decimal.RequireFromString(ask[0]),
 			Amount: decimal.RequireFromString(ask[1]),
 		}
-		o.EffectivePrice = o.Price.Mul(AskAddition).RoundUp(2)
+		o.EffectivePrice = o.Price.Mul(AskAddition)
 		a = append(a, o)
 	}
 	b := make([]model.Order, 0, len(o.Bids))
@@ -50,14 +50,14 @@ func Book() ([]model.Order, []model.Order, error) {
 			Price:  decimal.RequireFromString(bid[0]),
 			Amount: decimal.RequireFromString(bid[1]),
 		}
-		o.EffectivePrice = o.Price.Mul(BidReduction).RoundDown(2)
+		o.EffectivePrice = o.Price.Mul(BidReduction)
 		b = append(b, o)
 	}
 
 	return a, b, nil
 }
 
-func Balances(c *config.Config) (usdt, xch decimal.Decimal) {
+func Balances(c *config.Config) (b model.Balances, err error) {
 	s := kucoin.NewApiService(
 		kucoin.ApiKeyOption(c.KKey),
 		kucoin.ApiKeyVersionOption(kucoin.ApiKeyVersionV2),
@@ -72,8 +72,7 @@ func Balances(c *config.Config) (usdt, xch decimal.Decimal) {
 	}
 
 	var a kucoin.AccountsModel
-	if err := resp.ReadData(&a); err != nil {
-		fmt.Println(err)
+	if err = resp.ReadData(&a); err != nil {
 		return
 	}
 
@@ -81,14 +80,14 @@ func Balances(c *config.Config) (usdt, xch decimal.Decimal) {
 		if aa.Type == "trade" {
 			switch aa.Currency {
 			case "USDT":
-				usdt = decimal.RequireFromString(aa.Available)
+				b.USDT = decimal.RequireFromString(aa.Available)
 			case "XCH":
-				xch = decimal.RequireFromString(aa.Available)
+				b.XCH = decimal.RequireFromString(aa.Available)
 			}
 		}
 	}
 
-	return
+	return b, nil
 }
 
 // {65a8928fcf1c7f00074b0ea7}

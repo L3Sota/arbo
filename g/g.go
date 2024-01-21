@@ -42,7 +42,7 @@ func Book() ([]model.Order, []model.Order, error) {
 			Price:  decimal.RequireFromString(ask[0]),
 			Amount: decimal.RequireFromString(ask[1]),
 		}
-		o.EffectivePrice = o.Price.Mul(AskAddition).RoundUp(2)
+		o.EffectivePrice = o.Price.Mul(AskAddition)
 		a = append(a, o)
 	}
 	b := make([]model.Order, 0, len(o.Bids))
@@ -52,14 +52,14 @@ func Book() ([]model.Order, []model.Order, error) {
 			Price:  decimal.RequireFromString(bid[0]),
 			Amount: decimal.RequireFromString(bid[1]),
 		}
-		o.EffectivePrice = o.Price.Mul(BidReduction).RoundDown(2)
+		o.EffectivePrice = o.Price.Mul(BidReduction)
 		b = append(b, o)
 	}
 
 	return a, b, nil
 }
 
-func Balances(c *config.Config) (usdt, xch decimal.Decimal) {
+func Balances(c *config.Config) (b model.Balances, err error) {
 	client := gateapi.NewAPIClient(gateapi.NewConfiguration())
 
 	ctx := context.WithValue(context.Background(),
@@ -72,20 +72,19 @@ func Balances(c *config.Config) (usdt, xch decimal.Decimal) {
 
 	a, _, err := client.SpotApi.ListSpotAccounts(ctx, nil)
 	if err != nil {
-		fmt.Println(err)
-		return
+		return b, err
 	}
 
 	for _, aa := range a {
 		switch aa.Currency {
 		case "USDT":
-			usdt = decimal.RequireFromString(aa.Available)
+			b.USDT = decimal.RequireFromString(aa.Available)
 		case "XCH":
-			xch = decimal.RequireFromString(aa.Available)
+			b.XCH = decimal.RequireFromString(aa.Available)
 		}
 	}
 
-	return
+	return b, nil
 }
 
 // order: {Id:489126754641 Text:apiv4 AmendText:- CreateTime:1705482626 UpdateTime:1705482626 CreateTimeMs:1705482626977 UpdateTimeMs:1705482626977 Status:cancelled CurrencyPair:XCH_USDT Type:limit Account:spot Side:buy Amount:0.1 Price:20 TimeInForce:ioc Iceberg:0 AutoBorrow:false AutoRepay:false Left:0.1 FillPrice:0 FilledTotal:0 AvgDealPrice: Fee:0 FeeCurrency:XCH PointFee:0 GtFee:0 GtMakerFee:0 GtTakerFee:0 GtDiscount:false RebatedFee:0 RebatedFeeCurrency:USDT StpId:0 StpAct: FinishAs:ioc}

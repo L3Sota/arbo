@@ -3,7 +3,9 @@ package arb
 import (
 	"testing"
 
+	"github.com/L3Sota/arbo/arb/config"
 	"github.com/L3Sota/arbo/arb/model"
+	"github.com/L3Sota/arbo/g"
 	"github.com/L3Sota/arbo/k"
 	"github.com/L3Sota/arbo/m"
 	"github.com/google/go-cmp/cmp"
@@ -12,6 +14,8 @@ import (
 )
 
 func TestArbo(t *testing.T) {
+	t.Parallel()
+
 	type arboOut struct {
 		As            side
 		Bs            side
@@ -22,6 +26,8 @@ func TestArbo(t *testing.T) {
 		Profit        decimal.Decimal
 		TotalBuyUSDT  map[model.ExchangeType]decimal.Decimal
 		TotalSellUSDT map[model.ExchangeType]decimal.Decimal
+		TotalBuyXCH   map[model.ExchangeType]decimal.Decimal
+		TotalSellXCH  map[model.ExchangeType]decimal.Decimal
 	}
 
 	empty := map[model.ExchangeType]decimal.Decimal{
@@ -51,6 +57,8 @@ func TestArbo(t *testing.T) {
 		Profit:        decimal.Zero,
 		TotalBuyUSDT:  empty,
 		TotalSellUSDT: empty,
+		TotalBuyXCH:   empty,
+		TotalSellXCH:  empty,
 	}
 
 	for name, tc := range map[string]struct {
@@ -109,7 +117,7 @@ func TestArbo(t *testing.T) {
 			result: arboOut{
 				As: side{
 					I:          1,
-					HeadAmount: decimal.NewFromInt(1),
+					HeadAmount: decimal.Zero,
 					LastPrice:  decimal.NewFromInt(20),
 					Move:       true,
 				},
@@ -125,7 +133,7 @@ func TestArbo(t *testing.T) {
 				WithdrawXCH:   m.Fees.WithdrawalFlatXCH,
 				Profit:        decimal.NewFromInt(2).Sub(k.Fees.WithdrawalFlatUSDT).Sub(m.Fees.WithdrawalFlatXCH.Mul(decimal.NewFromInt(28))),
 				TotalBuyUSDT: map[model.ExchangeType]decimal.Decimal{
-					model.ME: decimal.NewFromInt(20),
+					model.ME: decimal.NewFromInt(25),
 					model.Ku: decimal.Zero,
 					model.Hu: decimal.Zero,
 					model.Co: decimal.Zero,
@@ -133,7 +141,21 @@ func TestArbo(t *testing.T) {
 				},
 				TotalSellUSDT: map[model.ExchangeType]decimal.Decimal{
 					model.ME: decimal.Zero,
-					model.Ku: decimal.NewFromInt(28),
+					model.Ku: decimal.NewFromInt(27),
+					model.Hu: decimal.Zero,
+					model.Co: decimal.Zero,
+					model.Ga: decimal.Zero,
+				},
+				TotalBuyXCH: map[model.ExchangeType]decimal.Decimal{
+					model.ME: decimal.NewFromInt(1),
+					model.Ku: decimal.Zero,
+					model.Hu: decimal.Zero,
+					model.Co: decimal.Zero,
+					model.Ga: decimal.Zero,
+				},
+				TotalSellXCH: map[model.ExchangeType]decimal.Decimal{
+					model.ME: decimal.Zero,
+					model.Ku: decimal.NewFromInt(1),
 					model.Hu: decimal.Zero,
 					model.Co: decimal.Zero,
 					model.Ga: decimal.Zero,
@@ -172,7 +194,7 @@ func TestArbo(t *testing.T) {
 				},
 				Bs: side{
 					I:          1,
-					HeadAmount: decimal.NewFromInt(2),
+					HeadAmount: decimal.Zero,
 					LastPrice:  decimal.NewFromInt(28),
 					Move:       true,
 				},
@@ -182,7 +204,7 @@ func TestArbo(t *testing.T) {
 				WithdrawXCH:   m.Fees.WithdrawalFlatXCH,
 				Profit:        decimal.NewFromInt(4).Sub(k.Fees.WithdrawalFlatUSDT).Sub(m.Fees.WithdrawalFlatXCH.Mul(decimal.NewFromInt(28))),
 				TotalBuyUSDT: map[model.ExchangeType]decimal.Decimal{
-					model.ME: decimal.NewFromInt(62), // 20 + 2*21
+					model.ME: decimal.NewFromInt(77), // 25 + 2*26
 					model.Ku: decimal.Zero,
 					model.Hu: decimal.Zero,
 					model.Co: decimal.Zero,
@@ -190,7 +212,21 @@ func TestArbo(t *testing.T) {
 				},
 				TotalSellUSDT: map[model.ExchangeType]decimal.Decimal{
 					model.ME: decimal.Zero,
-					model.Ku: decimal.NewFromInt(84), // 3*28
+					model.Ku: decimal.NewFromInt(81), // 3*27
+					model.Hu: decimal.Zero,
+					model.Co: decimal.Zero,
+					model.Ga: decimal.Zero,
+				},
+				TotalBuyXCH: map[model.ExchangeType]decimal.Decimal{
+					model.ME: decimal.NewFromInt(3),
+					model.Ku: decimal.Zero,
+					model.Hu: decimal.Zero,
+					model.Co: decimal.Zero,
+					model.Ga: decimal.Zero,
+				},
+				TotalSellXCH: map[model.ExchangeType]decimal.Decimal{
+					model.ME: decimal.Zero,
+					model.Ku: decimal.NewFromInt(3),
 					model.Hu: decimal.Zero,
 					model.Co: decimal.Zero,
 					model.Ga: decimal.Zero,
@@ -229,13 +265,13 @@ func TestArbo(t *testing.T) {
 			result: arboOut{
 				As: side{
 					I:          2,
-					HeadAmount: decimal.NewFromInt(1),
+					HeadAmount: decimal.Zero,
 					LastPrice:  decimal.NewFromInt(21),
 					Move:       true,
 				},
 				Bs: side{
 					I:          2,
-					HeadAmount: decimal.NewFromInt(1),
+					HeadAmount: decimal.Zero,
 					LastPrice:  decimal.NewFromInt(29),
 					Move:       true,
 				},
@@ -245,7 +281,7 @@ func TestArbo(t *testing.T) {
 				WithdrawXCH:   m.Fees.WithdrawalFlatXCH,
 				Profit:        decimal.NewFromInt(5).Sub(k.Fees.WithdrawalFlatUSDT).Sub(m.Fees.WithdrawalFlatXCH.Mul(decimal.NewFromInt(29))),
 				TotalBuyUSDT: map[model.ExchangeType]decimal.Decimal{
-					model.ME: decimal.NewFromInt(83), // 20 + 3*21
+					model.ME: decimal.NewFromInt(103), // 25 + 3*26
 					model.Ku: decimal.Zero,
 					model.Hu: decimal.Zero,
 					model.Co: decimal.Zero,
@@ -253,8 +289,22 @@ func TestArbo(t *testing.T) {
 				},
 				TotalSellUSDT: map[model.ExchangeType]decimal.Decimal{
 					model.ME: decimal.Zero,
-					model.Ku: decimal.NewFromInt(84), // 3*28
-					model.Hu: decimal.NewFromInt(29), // 29
+					model.Ku: decimal.NewFromInt(81), // 3*27
+					model.Hu: decimal.NewFromInt(27), // 27
+					model.Co: decimal.Zero,
+					model.Ga: decimal.Zero,
+				},
+				TotalBuyXCH: map[model.ExchangeType]decimal.Decimal{
+					model.ME: decimal.NewFromInt(4),
+					model.Ku: decimal.Zero,
+					model.Hu: decimal.Zero,
+					model.Co: decimal.Zero,
+					model.Ga: decimal.Zero,
+				},
+				TotalSellXCH: map[model.ExchangeType]decimal.Decimal{
+					model.ME: decimal.Zero,
+					model.Ku: decimal.NewFromInt(3),
+					model.Hu: decimal.NewFromInt(1),
 					model.Co: decimal.Zero,
 					model.Ga: decimal.Zero,
 				},
@@ -304,15 +354,15 @@ func TestArbo(t *testing.T) {
 			result: arboOut{
 				As: side{
 					I:          2,
-					HeadAmount: decimal.NewFromInt(100),
+					HeadAmount: decimal.Zero,
 					LastPrice:  decimal.NewFromInt(21),
-					Move:       false,
+					Move:       true,
 				},
 				Bs: side{
 					I:          2,
-					HeadAmount: decimal.NewFromInt(10),
+					HeadAmount: decimal.Zero,
 					LastPrice:  decimal.NewFromInt(29),
-					Move:       false,
+					Move:       true,
 				},
 				TotalTradeXCH: decimal.NewFromInt(4),
 				Gain:          decimal.NewFromInt(5), // 2 + 2 + 1
@@ -320,7 +370,7 @@ func TestArbo(t *testing.T) {
 				WithdrawXCH:   m.Fees.WithdrawalFlatXCH,
 				Profit:        decimal.NewFromInt(5).Sub(k.Fees.WithdrawalFlatUSDT).Sub(m.Fees.WithdrawalFlatXCH.Mul(decimal.NewFromInt(29))),
 				TotalBuyUSDT: map[model.ExchangeType]decimal.Decimal{
-					model.ME: decimal.NewFromInt(83), // 20 + 3*21
+					model.ME: decimal.NewFromInt(103), // 25 + 3*26
 					model.Ku: decimal.Zero,
 					model.Hu: decimal.Zero,
 					model.Co: decimal.Zero,
@@ -328,25 +378,166 @@ func TestArbo(t *testing.T) {
 				},
 				TotalSellUSDT: map[model.ExchangeType]decimal.Decimal{
 					model.ME: decimal.Zero,
-					model.Ku: decimal.NewFromInt(84), // 3*28
-					model.Hu: decimal.NewFromInt(29), // 29
+					model.Ku: decimal.NewFromInt(81), // 3*27
+					model.Hu: decimal.NewFromInt(27), // 27
+					model.Co: decimal.Zero,
+					model.Ga: decimal.Zero,
+				},
+				TotalBuyXCH: map[model.ExchangeType]decimal.Decimal{
+					model.ME: decimal.NewFromInt(4),
+					model.Ku: decimal.Zero,
+					model.Hu: decimal.Zero,
+					model.Co: decimal.Zero,
+					model.Ga: decimal.Zero,
+				},
+				TotalSellXCH: map[model.ExchangeType]decimal.Decimal{
+					model.ME: decimal.Zero,
+					model.Ku: decimal.NewFromInt(3),
+					model.Hu: decimal.NewFromInt(1),
 					model.Co: decimal.Zero,
 					model.Ga: decimal.Zero,
 				},
 			},
 		},
 	} {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			tc.result.As.Book = tc.a
 			tc.result.Bs.Book = tc.b
-			as, bs, totalTradeQuote, gain, withdrawUSDT, withdrawXCH, profit, totalBuyBase, totalSellBase := arbo(tc.a, tc.b)
+			as, bs, totalTradeQuote, gain, withdrawUSDT, withdrawXCH, profit, totalBuyBase, totalSellBase, totalBuyXCH, totalSellXCH := arbo(tc.a, tc.b, ignoreBalances, &config.Config{})
 			if diff := cmp.Diff(tc.result, arboOut{
-				as, bs, totalTradeQuote, gain, withdrawUSDT, withdrawXCH, profit, totalBuyBase, totalSellBase,
+				as, bs, totalTradeQuote, gain, withdrawUSDT, withdrawXCH, profit, totalBuyBase, totalSellBase, totalBuyXCH, totalSellXCH,
+			}, cmpopts.EquateEmpty(), cmpopts.IgnoreFields(side{}, "HeadAllowance")); diff != "" {
+				t.Errorf("-want/+got: %v", diff)
+			}
+		})
+	}
+
+	for name, tc := range map[string]struct {
+		a        []model.Order
+		b        []model.Order
+		balances map[model.ExchangeType]model.Balances
+		result   arboOut
+	}{
+		"match a < b, a > b, balance constrained on a, no further match": {
+			a: []model.Order{
+				{
+					Ex:             model.ME,
+					Price:          decimal.NewFromInt(20),
+					EffectivePrice: decimal.NewFromInt(25),
+					Amount:         decimal.NewFromInt(1),
+				},
+				{
+					Ex:             model.ME,
+					Price:          decimal.NewFromInt(21),
+					EffectivePrice: decimal.NewFromInt(26),
+					Amount:         decimal.NewFromInt(3),
+				},
+				{
+					Ex:             model.Co,
+					Price:          decimal.NewFromInt(22),
+					EffectivePrice: decimal.NewFromInt(27),
+					Amount:         decimal.NewFromInt(100),
+				},
+			},
+			b: []model.Order{
+				{
+					Ex:             model.Ku,
+					Price:          decimal.NewFromInt(28),
+					EffectivePrice: decimal.NewFromInt(27),
+					Amount:         decimal.NewFromInt(3),
+				},
+				{
+					Ex:             model.Ga,
+					Price:          decimal.NewFromInt(29),
+					EffectivePrice: decimal.NewFromInt(27),
+					Amount:         decimal.NewFromInt(1),
+				},
+				{
+					Ex:             model.Ga,
+					Price:          decimal.NewFromInt(30),
+					EffectivePrice: decimal.NewFromInt(27),
+					Amount:         decimal.NewFromInt(10),
+				},
+			},
+			balances: map[model.ExchangeType]model.Balances{
+				model.ME: {
+					XCH:  decimal.Zero,
+					USDT: decimal.NewFromInt(90),
+				},
+				model.Ku: bigBalance,
+				model.Hu: bigBalance,
+				model.Co: bigBalance,
+				model.Ga: bigBalance,
+			},
+			result: arboOut{
+				As: side{
+					I:             2,
+					HeadAmount:    decimal.NewFromFloat(0.5),
+					HeadAllowance: decimal.NewFromFloat(0.5),
+					LastPrice:     decimal.NewFromInt(21),
+					Move:          true,
+				},
+				Bs: side{
+					I:             1,
+					HeadAmount:    decimal.NewFromFloat(0.5),
+					HeadAllowance: big.Mul(g.BidReduction),
+					LastPrice:     decimal.NewFromInt(29),
+					Move:          false,
+				},
+				TotalTradeXCH: decimal.NewFromFloat(3.5),
+				Gain:          decimal.NewFromFloat(4.5), // 2 + 2 + 0.5
+				WithdrawUSDT:  k.Fees.WithdrawalFlatUSDT.Add(g.Fees.WithdrawalFlatUSDT),
+				WithdrawXCH:   m.Fees.WithdrawalFlatXCH,
+				Profit:        decimal.NewFromFloat(4.5).Sub(k.Fees.WithdrawalFlatUSDT).Sub(g.Fees.WithdrawalFlatUSDT).Sub(m.Fees.WithdrawalFlatXCH.Mul(decimal.NewFromInt(29))),
+				TotalBuyUSDT: map[model.ExchangeType]decimal.Decimal{
+					model.ME: decimal.NewFromInt(90), // balance
+					model.Ku: decimal.Zero,
+					model.Hu: decimal.Zero,
+					model.Co: decimal.Zero,
+					model.Ga: decimal.Zero,
+				},
+				TotalSellUSDT: map[model.ExchangeType]decimal.Decimal{
+					model.ME: decimal.Zero,
+					model.Ku: decimal.NewFromInt(81), // 3*27
+					model.Hu: decimal.Zero,
+					model.Co: decimal.Zero,
+					model.Ga: decimal.NewFromFloat(13.5), // 0.5*27
+				},
+				TotalBuyXCH: map[model.ExchangeType]decimal.Decimal{
+					model.ME: decimal.NewFromFloat(3.5),
+					model.Ku: decimal.Zero,
+					model.Hu: decimal.Zero,
+					model.Co: decimal.Zero,
+					model.Ga: decimal.Zero,
+				},
+				TotalSellXCH: map[model.ExchangeType]decimal.Decimal{
+					model.ME: decimal.Zero,
+					model.Ku: decimal.NewFromInt(3),
+					model.Hu: decimal.Zero,
+					model.Co: decimal.Zero,
+					model.Ga: decimal.NewFromFloat(0.5),
+				},
+			},
+		},
+	} {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			tc.result.As.Book = tc.a
+			tc.result.Bs.Book = tc.b
+			as, bs, totalTradeQuote, gain, withdrawUSDT, withdrawXCH, profit, totalBuyBase, totalSellBase, totalBuyXCH, totalSellXCH := arbo(tc.a, tc.b, tc.balances, &config.Config{})
+			if diff := cmp.Diff(tc.result, arboOut{
+				as, bs, totalTradeQuote, gain, withdrawUSDT, withdrawXCH, profit, totalBuyBase, totalSellBase, totalBuyXCH, totalSellXCH,
 			}, cmpopts.EquateEmpty()); diff != "" {
 				t.Errorf("-want/+got: %v", diff)
 			}
 		})
 	}
+
 }
 
 func BenchmarkGatherBooksP(b *testing.B) {

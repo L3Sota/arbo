@@ -33,6 +33,11 @@ func (e ExchangeType) String() string {
 	}
 }
 
+type Balances struct {
+	XCH  decimal.Decimal
+	USDT decimal.Decimal
+}
+
 type Order struct {
 	Ex             ExchangeType
 	Price          decimal.Decimal

@@ -53,7 +53,7 @@ func Book() ([]model.Order, []model.Order, error) {
 			Price:  decimal.RequireFromString(ask[0]),
 			Amount: decimal.RequireFromString(ask[1]),
 		}
-		o.EffectivePrice = o.Price.Mul(AskAddition).RoundUp(2)
+		o.EffectivePrice = o.Price.Mul(AskAddition)
 		a = append(a, o)
 	}
 	b := make([]model.Order, 0, len(o.Bids))
@@ -63,7 +63,7 @@ func Book() ([]model.Order, []model.Order, error) {
 			Price:  decimal.RequireFromString(bid[0]),
 			Amount: decimal.RequireFromString(bid[1]),
 		}
-		o.EffectivePrice = o.Price.Mul(BidReduction).RoundDown(2)
+		o.EffectivePrice = o.Price.Mul(BidReduction)
 		b = append(b, o)
 	}
 

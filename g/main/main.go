@@ -23,8 +23,9 @@ func book() {
 }
 
 func balances() {
-	u, x := g.Balances(config.Load())
+	b, err := g.Balances(config.Load())
 
-	fmt.Println(u.String())
-	fmt.Println(x.String())
+	fmt.Println(b.USDT.String())
+	fmt.Println(b.XCH.String())
+	fmt.Println(err)
 }

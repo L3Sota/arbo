@@ -16,18 +16,33 @@ import (
 )
 
 type side struct {
-	Book       []model.Order
-	I          int
-	HeadAmount decimal.Decimal
-	LastPrice  decimal.Decimal
-	Move       bool
+	Book          []model.Order
+	I             int
+	HeadAmount    decimal.Decimal
+	HeadAllowance decimal.Decimal
+	LastPrice     decimal.Decimal
+	Move          bool
 }
 
 var fees = map[model.ExchangeType]model.Fees{
 	model.ME: m.Fees,
 	model.Ku: k.Fees,
-	model.Ga: g.Fees,
 	model.Co: c.Fees,
+	model.Ga: g.Fees,
+}
+
+var big = decimal.New(1, 10)
+var bigBalance = model.Balances{
+	XCH:  big,
+	USDT: big,
+}
+
+var ignoreBalances = map[model.ExchangeType]model.Balances{
+	model.ME: bigBalance,
+	model.Ku: bigBalance,
+	model.Hu: bigBalance,
+	model.Co: bigBalance,
+	model.Ga: bigBalance,
 }
 
 // gather price information from all exchanges
@@ -119,13 +134,63 @@ func GatherBooksP() ([]model.Order, []model.Order) {
 	return a, b
 }
 
+func GatherBalancesP(conf *config.Config) map[model.ExchangeType]model.Balances {
+	m := make(map[model.ExchangeType]model.Balances, len(model.ExchangeTypes))
+	eg, _ := errgroup.WithContext(context.Background())
+	eg.Go(func() error {
+		m[model.ME] = model.Balances{}
+		return nil
+	})
+	eg.Go(func() error {
+		b, err := k.Balances(conf)
+		if err != nil {
+			return fmt.Errorf("k balances: %w", err)
+		}
+		m[model.Ku] = b
+		return nil
+	})
+	eg.Go(func() error {
+		b, err := g.Balances(conf)
+		if err != nil {
+			return fmt.Errorf("g balances: %w", err)
+		}
+		m[model.Ga] = b
+		return nil
+	})
+	eg.Go(func() error {
+		b, err := c.Balances()
+		if err != nil {
+			return fmt.Errorf("c balances: %w", err)
+		}
+		m[model.Co] = b
+		return nil
+	})
+
+	if err := eg.Wait(); err != nil {
+		fmt.Println(err)
+		return nil
+	}
+
+	return m
+}
+
 func Book(c *config.Config) {
+	bb := GatherBalancesP(c)
+
+	for e, b := range bb {
+		if b.XCH.IsZero() && b.USDT.IsZero() {
+			fmt.Printf("warning: %v balances are zero\n", e.String())
+		}
+	}
+
+	fmt.Println(bb)
+
 	a, b := GatherBooksP()
 
-	as, bs, totalTradeXCH, gain, withdrawUSDT, withdrawXCH, profit, totalBuyUSDT, totalSellUSDT := arbo(a, b)
-
-	msg := fmt.Sprintf("Buy $ %v / Sell $ %v ; Asks %v - %v / Bids %v - %v ; trade %v XCH (g %v - %v XCH - %v USDT = p %v)",
-		totalBuyUSDT, totalSellUSDT, a[0].Price, as.LastPrice, b[0].Price, bs.LastPrice, totalTradeXCH, gain, withdrawXCH, withdrawUSDT, profit)
+	as, bs, totalTradeXCH, gain, withdrawUSDT, withdrawXCH, profit, totalBuyUSDT, totalSellUSDT, totalBuyXCH, totalSellXCH := arbo(a, b, bb, c)
+	template := `Buy $ %v , XCH %v / Sell $ %v , XCH %v ; Asks %v - %v / Bids %v - %v ; trade %v XCH (g %v - %v XCH - %v USDT = p %v)`
+	msg := fmt.Sprintf(template,
+		totalBuyUSDT, totalBuyXCH, totalSellUSDT, totalSellXCH, a[0].Price, as.LastPrice, b[0].Price, bs.LastPrice, totalTradeXCH, gain, withdrawXCH, withdrawUSDT, profit)
 
 	if profit.IsPositive() && c.PEnable {
 		p := pushover.New(c.PKey)
@@ -156,15 +221,27 @@ func Book(c *config.Config) {
 	}
 	fmt.Println("===")
 	fmt.Println(msg)
+
+	as, bs, totalTradeXCH, gain, withdrawUSDT, withdrawXCH, profit, totalBuyUSDT, totalSellUSDT, totalBuyXCH, totalSellXCH = arbo(a, b, ignoreBalances, c)
+
+	msg = fmt.Sprintf(template,
+		totalBuyUSDT, totalBuyXCH, totalSellUSDT, totalSellXCH, a[0].Price, as.LastPrice, b[0].Price, bs.LastPrice, totalTradeXCH, gain, withdrawXCH, withdrawUSDT, profit)
+
+	fmt.Println("when ignoring balances:")
+	fmt.Println(msg)
 }
 
-func arbo(a, b []model.Order) (side, side, decimal.Decimal, decimal.Decimal, decimal.Decimal, decimal.Decimal, decimal.Decimal, map[model.ExchangeType]decimal.Decimal, map[model.ExchangeType]decimal.Decimal) {
+func arbo(a, b []model.Order, balances map[model.ExchangeType]model.Balances, c *config.Config) (side, side, decimal.Decimal, decimal.Decimal, decimal.Decimal, decimal.Decimal, decimal.Decimal, map[model.ExchangeType]decimal.Decimal, map[model.ExchangeType]decimal.Decimal, map[model.ExchangeType]decimal.Decimal, map[model.ExchangeType]decimal.Decimal) {
 	totalTradeXCH := decimal.Zero
 	totalBuyUSDT := make(map[model.ExchangeType]decimal.Decimal, len(model.ExchangeTypes))
 	totalSellUSDT := make(map[model.ExchangeType]decimal.Decimal, len(model.ExchangeTypes))
+	totalBuyXCH := make(map[model.ExchangeType]decimal.Decimal, len(model.ExchangeTypes))
+	totalSellXCH := make(map[model.ExchangeType]decimal.Decimal, len(model.ExchangeTypes))
 	for _, t := range model.ExchangeTypes {
 		totalBuyUSDT[t] = decimal.Zero
 		totalSellUSDT[t] = decimal.Zero
+		totalBuyXCH[t] = decimal.Zero
+		totalSellXCH[t] = decimal.Zero
 	}
 	gain := decimal.Zero
 
@@ -186,14 +263,6 @@ func arbo(a, b []model.Order) (side, side, decimal.Decimal, decimal.Decimal, dec
 
 	// buy into the low asks, sell off to the high bids
 	for as.I < len(a) && bs.I < len(b) {
-		// deferred update to prevent running off end of array
-		for _, s := range sides {
-			if s.Move {
-				s.HeadAmount = s.Book[s.I].Amount
-				s.Move = false
-			}
-		}
-
 		aa := a[as.I]
 		bb := b[bs.I]
 
@@ -202,26 +271,35 @@ func arbo(a, b []model.Order) (side, side, decimal.Decimal, decimal.Decimal, dec
 			break
 		}
 
-		// arb
-		tradeAmount := decimal.Zero
-		switch as.HeadAmount.Cmp(bs.HeadAmount) {
-		case -1:
-			tradeAmount = as.HeadAmount
-			bs.HeadAmount = bs.HeadAmount.Sub(tradeAmount)
-			as.Move = true
-		case 1:
-			tradeAmount = bs.HeadAmount
-			as.HeadAmount = as.HeadAmount.Sub(tradeAmount)
-			bs.Move = true
-		case 0:
-			tradeAmount = as.HeadAmount
-			as.Move = true
-			bs.Move = true
+		// deferred update to prevent running off end of array
+		for _, s := range sides {
+			if s.Move {
+				s.HeadAmount = s.Book[s.I].Amount
+				s.Move = false
+			}
 		}
+
+		// arb
+		// consider balances (allowances)
+		buyAllowanceUSDT := balances[aa.Ex].USDT.Sub(totalBuyUSDT[aa.Ex])
+		as.HeadAllowance = buyAllowanceUSDT.Div(aa.EffectivePrice).RoundDown(3)
+		bs.HeadAllowance = balances[bb.Ex].XCH.Sub(totalSellXCH[bb.Ex]).Mul(decimal.NewFromInt(1).Sub(fees[bb.Ex].MakerTakerRatio))
+		tradeAmount := decimal.Min(as.HeadAmount, bs.HeadAmount, as.HeadAllowance, bs.HeadAllowance)
+
+		for _, s := range sides {
+			if s.HeadAmount.Equal(tradeAmount) || s.HeadAllowance.Equal(tradeAmount) {
+				s.Move = true
+			}
+			s.HeadAmount = s.HeadAmount.Sub(tradeAmount)
+		}
+
+		// trade executes internally
 		totalTradeXCH = totalTradeXCH.Add(tradeAmount)
 		gain = gain.Add(tradeAmount.Mul(bb.EffectivePrice.Sub(aa.EffectivePrice)))
-		totalBuyUSDT[aa.Ex] = totalBuyUSDT[aa.Ex].Add(aa.Price.Mul(tradeAmount))
-		totalSellUSDT[bb.Ex] = totalSellUSDT[bb.Ex].Add(bb.Price.Mul(tradeAmount))
+		totalBuyUSDT[aa.Ex] = totalBuyUSDT[aa.Ex].Add(aa.EffectivePrice.Mul(tradeAmount))
+		totalSellUSDT[bb.Ex] = totalSellUSDT[bb.Ex].Add(bb.EffectivePrice.Mul(tradeAmount))
+		totalBuyXCH[aa.Ex] = totalBuyXCH[aa.Ex].Add(tradeAmount)
+		totalSellXCH[bb.Ex] = totalSellXCH[bb.Ex].Add(tradeAmount)
 
 		for _, s := range sides {
 			s.LastPrice = s.Book[s.I].Price
@@ -248,7 +326,7 @@ func arbo(a, b []model.Order) (side, side, decimal.Decimal, decimal.Decimal, dec
 
 	profit := gain.Sub(withdrawUSDT).Sub(withdrawXCH.Mul(bs.LastPrice))
 
-	return *as, *bs, totalTradeXCH, gain, withdrawUSDT, withdrawXCH, profit, totalBuyUSDT, totalSellUSDT
+	return *as, *bs, totalTradeXCH, gain, withdrawUSDT, withdrawXCH, profit, totalBuyUSDT, totalSellUSDT, totalBuyXCH, totalSellXCH
 }
 
 func merge(asc bool, xs ...[]model.Order) []model.Order {
