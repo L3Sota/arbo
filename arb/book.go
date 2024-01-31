@@ -75,7 +75,7 @@ func GatherBooksP() ([]model.Order, []model.Order) {
 	eg.Go(func() error {
 		a, b, err := m.Book()
 		if err != nil {
-			return err
+			return fmt.Errorf("m book: %w", err)
 		}
 		ma = a
 		mb = b
@@ -84,7 +84,7 @@ func GatherBooksP() ([]model.Order, []model.Order) {
 	eg.Go(func() error {
 		a, b, err := k.Book()
 		if err != nil {
-			return err
+			return fmt.Errorf("k book: %w", err)
 		}
 		ka = a
 		kb = b
@@ -93,7 +93,7 @@ func GatherBooksP() ([]model.Order, []model.Order) {
 	eg.Go(func() error {
 		a, b, err := g.Book()
 		if err != nil {
-			return err
+			return fmt.Errorf("g book: %w", err)
 		}
 		ga = a
 		gb = b
@@ -102,7 +102,7 @@ func GatherBooksP() ([]model.Order, []model.Order) {
 	eg.Go(func() error {
 		a, b, err := c.Book()
 		if err != nil {
-			return err
+			return fmt.Errorf("c book: %w", err)
 		}
 		ca = a
 		cb = b
