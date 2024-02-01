@@ -14,6 +14,9 @@ type Config struct {
 	GKey string `split_words:"true"`
 	GSec string `split_words:"true"`
 
+	CId  string `split_words:"true"`
+	CSec string `split_words:"true"`
+
 	loaded bool
 }
 

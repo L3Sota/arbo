@@ -2,6 +2,8 @@ package c
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 
 	"github.com/L3Sota/arbo/arb/model"
 	"github.com/shopspring/decimal"
@@ -66,4 +68,29 @@ func Book() ([]model.Order, []model.Order, error) {
 	}
 
 	return a, b, nil
+}
+
+func Balances() (b model.Balances, err error) {
+	//Inquire account asset constructure
+	accooutRespBody, err := GetAccount()
+	if err != nil {
+		return b, err
+	}
+	var a BalanceResp
+	json.Unmarshal(accooutRespBody, &a)
+
+	if a.Code != 0 {
+		return b, errors.New(fmt.Sprintf("[Error %d] %v", a.Code, a.Message))
+	}
+
+	for currency, aa := range a.AssetBalance {
+		switch currency {
+		case "USDT":
+			b.USDT = decimal.RequireFromString(aa.Available)
+		case "XCH":
+			b.XCH = decimal.RequireFromString(aa.Available)
+		}
+	}
+
+	return b, nil
 }
