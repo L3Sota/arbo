@@ -24,11 +24,12 @@ type side struct {
 	Move          bool
 }
 
-var fees = map[model.ExchangeType]model.Fees{
-	model.ExchangeTypeMe: m.Fees,
-	model.ExchangeTypeKu: k.Fees,
-	model.ExchangeTypeCo: c.Fees,
-	model.ExchangeTypeGa: g.Fees,
+var fees = [model.ExchangeTypeMax]model.Fees{
+	m.Fees,
+	k.Fees,
+	{}, // TODO h.Fees,
+	c.Fees,
+	g.Fees,
 }
 
 var big = decimal.New(1, 10)
@@ -36,13 +37,12 @@ var bigBalance = model.Balances{
 	XCH:  big,
 	USDT: big,
 }
-
-var ignoreBalances = map[model.ExchangeType]model.Balances{
-	model.ExchangeTypeMe: bigBalance,
-	model.ExchangeTypeKu: bigBalance,
-	model.ExchangeTypeHu: bigBalance,
-	model.ExchangeTypeCo: bigBalance,
-	model.ExchangeTypeGa: bigBalance,
+var ignoreBalances = [model.ExchangeTypeMax]model.Balances{
+	bigBalance,
+	bigBalance,
+	bigBalance,
+	bigBalance,
+	bigBalance,
 }
 
 // gather price information from all exchanges
@@ -134,8 +134,8 @@ func GatherBooksP() ([]model.Order, []model.Order) {
 	return a, b
 }
 
-func GatherBalancesP(conf *config.Config) map[model.ExchangeType]model.Balances {
-	m := make(map[model.ExchangeType]model.Balances, len(model.ExchangeTypes))
+func GatherBalancesP(conf *config.Config) [model.ExchangeTypeMax]model.Balances {
+	m := [model.ExchangeTypeMax]model.Balances{}
 	eg, _ := errgroup.WithContext(context.Background())
 	eg.Go(func() error {
 		m[model.ExchangeTypeMe] = model.Balances{}
@@ -168,7 +168,7 @@ func GatherBalancesP(conf *config.Config) map[model.ExchangeType]model.Balances 
 
 	if err := eg.Wait(); err != nil {
 		fmt.Println(err)
-		return nil
+		return m
 	}
 
 	return m
@@ -179,7 +179,7 @@ func Book(c *config.Config) {
 
 	for e, b := range bb {
 		if b.XCH.IsZero() && b.USDT.IsZero() {
-			fmt.Printf("warning: %v balances are zero\n", e.String())
+			fmt.Printf("warning: %v balances are zero\n", model.ExchangeType(e).String())
 		}
 	}
 
@@ -231,18 +231,12 @@ func Book(c *config.Config) {
 	fmt.Println(msg)
 }
 
-func arbo(a, b []model.Order, balances map[model.ExchangeType]model.Balances, c *config.Config) (side, side, decimal.Decimal, decimal.Decimal, decimal.Decimal, decimal.Decimal, decimal.Decimal, map[model.ExchangeType]decimal.Decimal, map[model.ExchangeType]decimal.Decimal, map[model.ExchangeType]decimal.Decimal, map[model.ExchangeType]decimal.Decimal) {
+func arbo(a, b []model.Order, balances [model.ExchangeTypeMax]model.Balances, c *config.Config) (side, side, decimal.Decimal, decimal.Decimal, decimal.Decimal, decimal.Decimal, decimal.Decimal, [model.ExchangeTypeMax]decimal.Decimal, [model.ExchangeTypeMax]decimal.Decimal, [model.ExchangeTypeMax]decimal.Decimal, [model.ExchangeTypeMax]decimal.Decimal) {
 	totalTradeXCH := decimal.Zero
-	totalBuyUSDT := make(map[model.ExchangeType]decimal.Decimal, len(model.ExchangeTypes))
-	totalSellUSDT := make(map[model.ExchangeType]decimal.Decimal, len(model.ExchangeTypes))
-	totalBuyXCH := make(map[model.ExchangeType]decimal.Decimal, len(model.ExchangeTypes))
-	totalSellXCH := make(map[model.ExchangeType]decimal.Decimal, len(model.ExchangeTypes))
-	for _, t := range model.ExchangeTypes {
-		totalBuyUSDT[t] = decimal.Zero
-		totalSellUSDT[t] = decimal.Zero
-		totalBuyXCH[t] = decimal.Zero
-		totalSellXCH[t] = decimal.Zero
-	}
+	totalBuyUSDT := [model.ExchangeTypeMax]decimal.Decimal{}
+	totalSellUSDT := [model.ExchangeTypeMax]decimal.Decimal{}
+	totalBuyXCH := [model.ExchangeTypeMax]decimal.Decimal{}
+	totalSellXCH := [model.ExchangeTypeMax]decimal.Decimal{}
 	gain := decimal.Zero
 
 	as := &side{
