@@ -25,10 +25,10 @@ type side struct {
 }
 
 var fees = map[model.ExchangeType]model.Fees{
-	model.ME: m.Fees,
-	model.Ku: k.Fees,
-	model.Co: c.Fees,
-	model.Ga: g.Fees,
+	model.ExchangeTypeMe: m.Fees,
+	model.ExchangeTypeKu: k.Fees,
+	model.ExchangeTypeCo: c.Fees,
+	model.ExchangeTypeGa: g.Fees,
 }
 
 var big = decimal.New(1, 10)
@@ -38,11 +38,11 @@ var bigBalance = model.Balances{
 }
 
 var ignoreBalances = map[model.ExchangeType]model.Balances{
-	model.ME: bigBalance,
-	model.Ku: bigBalance,
-	model.Hu: bigBalance,
-	model.Co: bigBalance,
-	model.Ga: bigBalance,
+	model.ExchangeTypeMe: bigBalance,
+	model.ExchangeTypeKu: bigBalance,
+	model.ExchangeTypeHu: bigBalance,
+	model.ExchangeTypeCo: bigBalance,
+	model.ExchangeTypeGa: bigBalance,
 }
 
 // gather price information from all exchanges
@@ -138,7 +138,7 @@ func GatherBalancesP(conf *config.Config) map[model.ExchangeType]model.Balances 
 	m := make(map[model.ExchangeType]model.Balances, len(model.ExchangeTypes))
 	eg, _ := errgroup.WithContext(context.Background())
 	eg.Go(func() error {
-		m[model.ME] = model.Balances{}
+		m[model.ExchangeTypeMe] = model.Balances{}
 		return nil
 	})
 	eg.Go(func() error {
@@ -146,7 +146,7 @@ func GatherBalancesP(conf *config.Config) map[model.ExchangeType]model.Balances 
 		if err != nil {
 			return fmt.Errorf("k balances: %w", err)
 		}
-		m[model.Ku] = b
+		m[model.ExchangeTypeKu] = b
 		return nil
 	})
 	eg.Go(func() error {
@@ -154,7 +154,7 @@ func GatherBalancesP(conf *config.Config) map[model.ExchangeType]model.Balances 
 		if err != nil {
 			return fmt.Errorf("g balances: %w", err)
 		}
-		m[model.Ga] = b
+		m[model.ExchangeTypeGa] = b
 		return nil
 	})
 	eg.Go(func() error {
@@ -162,7 +162,7 @@ func GatherBalancesP(conf *config.Config) map[model.ExchangeType]model.Balances 
 		if err != nil {
 			return fmt.Errorf("c balances: %w", err)
 		}
-		m[model.Co] = b
+		m[model.ExchangeTypeCo] = b
 		return nil
 	})
 

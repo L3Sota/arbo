@@ -7,26 +7,27 @@ import (
 type ExchangeType uint8
 
 const (
-	ME ExchangeType = iota
-	Ku
-	Hu
-	Co
-	Ga
+	ExchangeTypeMe ExchangeType = iota
+	ExchangeTypeKu
+	ExchangeTypeHu
+	ExchangeTypeCo
+	ExchangeTypeGa
+	ExchangeTypeMax
 )
 
-var ExchangeTypes = [5]ExchangeType{ME, Ku, Hu, Co, Ga}
+var ExchangeTypes = [ExchangeTypeMax]ExchangeType{ExchangeTypeMe, ExchangeTypeKu, ExchangeTypeHu, ExchangeTypeCo, ExchangeTypeGa}
 
 func (e ExchangeType) String() string {
 	switch e {
-	case ME:
-		return "ME"
-	case Ku:
+	case ExchangeTypeMe:
+		return "Me"
+	case ExchangeTypeKu:
 		return "Ku"
-	case Hu:
+	case ExchangeTypeHu:
 		return "Hu"
-	case Co:
+	case ExchangeTypeCo:
 		return "Co"
-	case Ga:
+	case ExchangeTypeGa:
 		return "Ga"
 	default:
 		return "??"

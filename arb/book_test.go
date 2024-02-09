@@ -31,11 +31,11 @@ func TestArbo(t *testing.T) {
 	}
 
 	empty := map[model.ExchangeType]decimal.Decimal{
-		model.ME: decimal.Zero,
-		model.Ku: decimal.Zero,
-		model.Hu: decimal.Zero,
-		model.Co: decimal.Zero,
-		model.Ga: decimal.Zero,
+		model.ExchangeTypeMe: decimal.Zero,
+		model.ExchangeTypeKu: decimal.Zero,
+		model.ExchangeTypeHu: decimal.Zero,
+		model.ExchangeTypeCo: decimal.Zero,
+		model.ExchangeTypeGa: decimal.Zero,
 	}
 	defaultOut := arboOut{
 		As: side{
@@ -74,7 +74,7 @@ func TestArbo(t *testing.T) {
 		"no match (effective price)": {
 			a: []model.Order{
 				{
-					Ex:             model.ME,
+					Ex:             model.ExchangeTypeMe,
 					Price:          decimal.NewFromInt(28),
 					EffectivePrice: decimal.NewFromInt(30),
 					Amount:         decimal.NewFromInt(1),
@@ -82,7 +82,7 @@ func TestArbo(t *testing.T) {
 			},
 			b: []model.Order{
 				{
-					Ex:             model.Ku,
+					Ex:             model.ExchangeTypeKu,
 					Price:          decimal.NewFromInt(31),
 					EffectivePrice: decimal.NewFromInt(29),
 					Amount:         decimal.NewFromInt(1),
@@ -100,7 +100,7 @@ func TestArbo(t *testing.T) {
 		"match a < b": {
 			a: []model.Order{
 				{
-					Ex:             model.ME,
+					Ex:             model.ExchangeTypeMe,
 					Price:          decimal.NewFromInt(20),
 					EffectivePrice: decimal.NewFromInt(25),
 					Amount:         decimal.NewFromInt(1),
@@ -108,7 +108,7 @@ func TestArbo(t *testing.T) {
 			},
 			b: []model.Order{
 				{
-					Ex:             model.Ku,
+					Ex:             model.ExchangeTypeKu,
 					Price:          decimal.NewFromInt(28),
 					EffectivePrice: decimal.NewFromInt(27),
 					Amount:         decimal.NewFromInt(3),
@@ -133,45 +133,45 @@ func TestArbo(t *testing.T) {
 				WithdrawXCH:   m.Fees.WithdrawalFlatXCH,
 				Profit:        decimal.NewFromInt(2).Sub(k.Fees.WithdrawalFlatUSDT).Sub(m.Fees.WithdrawalFlatXCH.Mul(decimal.NewFromInt(28))),
 				TotalBuyUSDT: map[model.ExchangeType]decimal.Decimal{
-					model.ME: decimal.NewFromInt(25),
-					model.Ku: decimal.Zero,
-					model.Hu: decimal.Zero,
-					model.Co: decimal.Zero,
-					model.Ga: decimal.Zero,
+					model.ExchangeTypeMe: decimal.NewFromInt(25),
+					model.ExchangeTypeKu: decimal.Zero,
+					model.ExchangeTypeHu: decimal.Zero,
+					model.ExchangeTypeCo: decimal.Zero,
+					model.ExchangeTypeGa: decimal.Zero,
 				},
 				TotalSellUSDT: map[model.ExchangeType]decimal.Decimal{
-					model.ME: decimal.Zero,
-					model.Ku: decimal.NewFromInt(27),
-					model.Hu: decimal.Zero,
-					model.Co: decimal.Zero,
-					model.Ga: decimal.Zero,
+					model.ExchangeTypeMe: decimal.Zero,
+					model.ExchangeTypeKu: decimal.NewFromInt(27),
+					model.ExchangeTypeHu: decimal.Zero,
+					model.ExchangeTypeCo: decimal.Zero,
+					model.ExchangeTypeGa: decimal.Zero,
 				},
 				TotalBuyXCH: map[model.ExchangeType]decimal.Decimal{
-					model.ME: decimal.NewFromInt(1),
-					model.Ku: decimal.Zero,
-					model.Hu: decimal.Zero,
-					model.Co: decimal.Zero,
-					model.Ga: decimal.Zero,
+					model.ExchangeTypeMe: decimal.NewFromInt(1),
+					model.ExchangeTypeKu: decimal.Zero,
+					model.ExchangeTypeHu: decimal.Zero,
+					model.ExchangeTypeCo: decimal.Zero,
+					model.ExchangeTypeGa: decimal.Zero,
 				},
 				TotalSellXCH: map[model.ExchangeType]decimal.Decimal{
-					model.ME: decimal.Zero,
-					model.Ku: decimal.NewFromInt(1),
-					model.Hu: decimal.Zero,
-					model.Co: decimal.Zero,
-					model.Ga: decimal.Zero,
+					model.ExchangeTypeMe: decimal.Zero,
+					model.ExchangeTypeKu: decimal.NewFromInt(1),
+					model.ExchangeTypeHu: decimal.Zero,
+					model.ExchangeTypeCo: decimal.Zero,
+					model.ExchangeTypeGa: decimal.Zero,
 				},
 			},
 		},
 		"match a < b, a > b": {
 			a: []model.Order{
 				{
-					Ex:             model.ME,
+					Ex:             model.ExchangeTypeMe,
 					Price:          decimal.NewFromInt(20),
 					EffectivePrice: decimal.NewFromInt(25),
 					Amount:         decimal.NewFromInt(1),
 				},
 				{
-					Ex:             model.ME,
+					Ex:             model.ExchangeTypeMe,
 					Price:          decimal.NewFromInt(21),
 					EffectivePrice: decimal.NewFromInt(26),
 					Amount:         decimal.NewFromInt(3),
@@ -179,7 +179,7 @@ func TestArbo(t *testing.T) {
 			},
 			b: []model.Order{
 				{
-					Ex:             model.Ku,
+					Ex:             model.ExchangeTypeKu,
 					Price:          decimal.NewFromInt(28),
 					EffectivePrice: decimal.NewFromInt(27),
 					Amount:         decimal.NewFromInt(3),
@@ -204,45 +204,45 @@ func TestArbo(t *testing.T) {
 				WithdrawXCH:   m.Fees.WithdrawalFlatXCH,
 				Profit:        decimal.NewFromInt(4).Sub(k.Fees.WithdrawalFlatUSDT).Sub(m.Fees.WithdrawalFlatXCH.Mul(decimal.NewFromInt(28))),
 				TotalBuyUSDT: map[model.ExchangeType]decimal.Decimal{
-					model.ME: decimal.NewFromInt(77), // 25 + 2*26
-					model.Ku: decimal.Zero,
-					model.Hu: decimal.Zero,
-					model.Co: decimal.Zero,
-					model.Ga: decimal.Zero,
+					model.ExchangeTypeMe: decimal.NewFromInt(77), // 25 + 2*26
+					model.ExchangeTypeKu: decimal.Zero,
+					model.ExchangeTypeHu: decimal.Zero,
+					model.ExchangeTypeCo: decimal.Zero,
+					model.ExchangeTypeGa: decimal.Zero,
 				},
 				TotalSellUSDT: map[model.ExchangeType]decimal.Decimal{
-					model.ME: decimal.Zero,
-					model.Ku: decimal.NewFromInt(81), // 3*27
-					model.Hu: decimal.Zero,
-					model.Co: decimal.Zero,
-					model.Ga: decimal.Zero,
+					model.ExchangeTypeMe: decimal.Zero,
+					model.ExchangeTypeKu: decimal.NewFromInt(81), // 3*27
+					model.ExchangeTypeHu: decimal.Zero,
+					model.ExchangeTypeCo: decimal.Zero,
+					model.ExchangeTypeGa: decimal.Zero,
 				},
 				TotalBuyXCH: map[model.ExchangeType]decimal.Decimal{
-					model.ME: decimal.NewFromInt(3),
-					model.Ku: decimal.Zero,
-					model.Hu: decimal.Zero,
-					model.Co: decimal.Zero,
-					model.Ga: decimal.Zero,
+					model.ExchangeTypeMe: decimal.NewFromInt(3),
+					model.ExchangeTypeKu: decimal.Zero,
+					model.ExchangeTypeHu: decimal.Zero,
+					model.ExchangeTypeCo: decimal.Zero,
+					model.ExchangeTypeGa: decimal.Zero,
 				},
 				TotalSellXCH: map[model.ExchangeType]decimal.Decimal{
-					model.ME: decimal.Zero,
-					model.Ku: decimal.NewFromInt(3),
-					model.Hu: decimal.Zero,
-					model.Co: decimal.Zero,
-					model.Ga: decimal.Zero,
+					model.ExchangeTypeMe: decimal.Zero,
+					model.ExchangeTypeKu: decimal.NewFromInt(3),
+					model.ExchangeTypeHu: decimal.Zero,
+					model.ExchangeTypeCo: decimal.Zero,
+					model.ExchangeTypeGa: decimal.Zero,
 				},
 			},
 		},
 		"match a < b, a > b, a = b": {
 			a: []model.Order{
 				{
-					Ex:             model.ME,
+					Ex:             model.ExchangeTypeMe,
 					Price:          decimal.NewFromInt(20),
 					EffectivePrice: decimal.NewFromInt(25),
 					Amount:         decimal.NewFromInt(1),
 				},
 				{
-					Ex:             model.ME,
+					Ex:             model.ExchangeTypeMe,
 					Price:          decimal.NewFromInt(21),
 					EffectivePrice: decimal.NewFromInt(26),
 					Amount:         decimal.NewFromInt(3),
@@ -250,13 +250,13 @@ func TestArbo(t *testing.T) {
 			},
 			b: []model.Order{
 				{
-					Ex:             model.Ku,
+					Ex:             model.ExchangeTypeKu,
 					Price:          decimal.NewFromInt(28),
 					EffectivePrice: decimal.NewFromInt(27),
 					Amount:         decimal.NewFromInt(3),
 				},
 				{
-					Ex:             model.Hu,
+					Ex:             model.ExchangeTypeHu,
 					Price:          decimal.NewFromInt(29),
 					EffectivePrice: decimal.NewFromInt(27),
 					Amount:         decimal.NewFromInt(1),
@@ -281,51 +281,51 @@ func TestArbo(t *testing.T) {
 				WithdrawXCH:   m.Fees.WithdrawalFlatXCH,
 				Profit:        decimal.NewFromInt(5).Sub(k.Fees.WithdrawalFlatUSDT).Sub(m.Fees.WithdrawalFlatXCH.Mul(decimal.NewFromInt(29))),
 				TotalBuyUSDT: map[model.ExchangeType]decimal.Decimal{
-					model.ME: decimal.NewFromInt(103), // 25 + 3*26
-					model.Ku: decimal.Zero,
-					model.Hu: decimal.Zero,
-					model.Co: decimal.Zero,
-					model.Ga: decimal.Zero,
+					model.ExchangeTypeMe: decimal.NewFromInt(103), // 25 + 3*26
+					model.ExchangeTypeKu: decimal.Zero,
+					model.ExchangeTypeHu: decimal.Zero,
+					model.ExchangeTypeCo: decimal.Zero,
+					model.ExchangeTypeGa: decimal.Zero,
 				},
 				TotalSellUSDT: map[model.ExchangeType]decimal.Decimal{
-					model.ME: decimal.Zero,
-					model.Ku: decimal.NewFromInt(81), // 3*27
-					model.Hu: decimal.NewFromInt(27), // 27
-					model.Co: decimal.Zero,
-					model.Ga: decimal.Zero,
+					model.ExchangeTypeMe: decimal.Zero,
+					model.ExchangeTypeKu: decimal.NewFromInt(81), // 3*27
+					model.ExchangeTypeHu: decimal.NewFromInt(27), // 27
+					model.ExchangeTypeCo: decimal.Zero,
+					model.ExchangeTypeGa: decimal.Zero,
 				},
 				TotalBuyXCH: map[model.ExchangeType]decimal.Decimal{
-					model.ME: decimal.NewFromInt(4),
-					model.Ku: decimal.Zero,
-					model.Hu: decimal.Zero,
-					model.Co: decimal.Zero,
-					model.Ga: decimal.Zero,
+					model.ExchangeTypeMe: decimal.NewFromInt(4),
+					model.ExchangeTypeKu: decimal.Zero,
+					model.ExchangeTypeHu: decimal.Zero,
+					model.ExchangeTypeCo: decimal.Zero,
+					model.ExchangeTypeGa: decimal.Zero,
 				},
 				TotalSellXCH: map[model.ExchangeType]decimal.Decimal{
-					model.ME: decimal.Zero,
-					model.Ku: decimal.NewFromInt(3),
-					model.Hu: decimal.NewFromInt(1),
-					model.Co: decimal.Zero,
-					model.Ga: decimal.Zero,
+					model.ExchangeTypeMe: decimal.Zero,
+					model.ExchangeTypeKu: decimal.NewFromInt(3),
+					model.ExchangeTypeHu: decimal.NewFromInt(1),
+					model.ExchangeTypeCo: decimal.Zero,
+					model.ExchangeTypeGa: decimal.Zero,
 				},
 			},
 		},
 		"match a < b, a > b, a = b, no further match": {
 			a: []model.Order{
 				{
-					Ex:             model.ME,
+					Ex:             model.ExchangeTypeMe,
 					Price:          decimal.NewFromInt(20),
 					EffectivePrice: decimal.NewFromInt(25),
 					Amount:         decimal.NewFromInt(1),
 				},
 				{
-					Ex:             model.ME,
+					Ex:             model.ExchangeTypeMe,
 					Price:          decimal.NewFromInt(21),
 					EffectivePrice: decimal.NewFromInt(26),
 					Amount:         decimal.NewFromInt(3),
 				},
 				{
-					Ex:             model.Co,
+					Ex:             model.ExchangeTypeCo,
 					Price:          decimal.NewFromInt(22),
 					EffectivePrice: decimal.NewFromInt(27),
 					Amount:         decimal.NewFromInt(100),
@@ -333,19 +333,19 @@ func TestArbo(t *testing.T) {
 			},
 			b: []model.Order{
 				{
-					Ex:             model.Ku,
+					Ex:             model.ExchangeTypeKu,
 					Price:          decimal.NewFromInt(28),
 					EffectivePrice: decimal.NewFromInt(27),
 					Amount:         decimal.NewFromInt(3),
 				},
 				{
-					Ex:             model.Hu,
+					Ex:             model.ExchangeTypeHu,
 					Price:          decimal.NewFromInt(29),
 					EffectivePrice: decimal.NewFromInt(27),
 					Amount:         decimal.NewFromInt(1),
 				},
 				{
-					Ex:             model.Ga,
+					Ex:             model.ExchangeTypeGa,
 					Price:          decimal.NewFromInt(30),
 					EffectivePrice: decimal.NewFromInt(27),
 					Amount:         decimal.NewFromInt(10),
@@ -370,32 +370,32 @@ func TestArbo(t *testing.T) {
 				WithdrawXCH:   m.Fees.WithdrawalFlatXCH,
 				Profit:        decimal.NewFromInt(5).Sub(k.Fees.WithdrawalFlatUSDT).Sub(m.Fees.WithdrawalFlatXCH.Mul(decimal.NewFromInt(29))),
 				TotalBuyUSDT: map[model.ExchangeType]decimal.Decimal{
-					model.ME: decimal.NewFromInt(103), // 25 + 3*26
-					model.Ku: decimal.Zero,
-					model.Hu: decimal.Zero,
-					model.Co: decimal.Zero,
-					model.Ga: decimal.Zero,
+					model.ExchangeTypeMe: decimal.NewFromInt(103), // 25 + 3*26
+					model.ExchangeTypeKu: decimal.Zero,
+					model.ExchangeTypeHu: decimal.Zero,
+					model.ExchangeTypeCo: decimal.Zero,
+					model.ExchangeTypeGa: decimal.Zero,
 				},
 				TotalSellUSDT: map[model.ExchangeType]decimal.Decimal{
-					model.ME: decimal.Zero,
-					model.Ku: decimal.NewFromInt(81), // 3*27
-					model.Hu: decimal.NewFromInt(27), // 27
-					model.Co: decimal.Zero,
-					model.Ga: decimal.Zero,
+					model.ExchangeTypeMe: decimal.Zero,
+					model.ExchangeTypeKu: decimal.NewFromInt(81), // 3*27
+					model.ExchangeTypeHu: decimal.NewFromInt(27), // 27
+					model.ExchangeTypeCo: decimal.Zero,
+					model.ExchangeTypeGa: decimal.Zero,
 				},
 				TotalBuyXCH: map[model.ExchangeType]decimal.Decimal{
-					model.ME: decimal.NewFromInt(4),
-					model.Ku: decimal.Zero,
-					model.Hu: decimal.Zero,
-					model.Co: decimal.Zero,
-					model.Ga: decimal.Zero,
+					model.ExchangeTypeMe: decimal.NewFromInt(4),
+					model.ExchangeTypeKu: decimal.Zero,
+					model.ExchangeTypeHu: decimal.Zero,
+					model.ExchangeTypeCo: decimal.Zero,
+					model.ExchangeTypeGa: decimal.Zero,
 				},
 				TotalSellXCH: map[model.ExchangeType]decimal.Decimal{
-					model.ME: decimal.Zero,
-					model.Ku: decimal.NewFromInt(3),
-					model.Hu: decimal.NewFromInt(1),
-					model.Co: decimal.Zero,
-					model.Ga: decimal.Zero,
+					model.ExchangeTypeMe: decimal.Zero,
+					model.ExchangeTypeKu: decimal.NewFromInt(3),
+					model.ExchangeTypeHu: decimal.NewFromInt(1),
+					model.ExchangeTypeCo: decimal.Zero,
+					model.ExchangeTypeGa: decimal.Zero,
 				},
 			},
 		},
@@ -424,19 +424,19 @@ func TestArbo(t *testing.T) {
 		"match a < b, a > b, balance constrained on a, no further match": {
 			a: []model.Order{
 				{
-					Ex:             model.ME,
+					Ex:             model.ExchangeTypeMe,
 					Price:          decimal.NewFromInt(20),
 					EffectivePrice: decimal.NewFromInt(25),
 					Amount:         decimal.NewFromInt(1),
 				},
 				{
-					Ex:             model.ME,
+					Ex:             model.ExchangeTypeMe,
 					Price:          decimal.NewFromInt(21),
 					EffectivePrice: decimal.NewFromInt(26),
 					Amount:         decimal.NewFromInt(3),
 				},
 				{
-					Ex:             model.Co,
+					Ex:             model.ExchangeTypeCo,
 					Price:          decimal.NewFromInt(22),
 					EffectivePrice: decimal.NewFromInt(27),
 					Amount:         decimal.NewFromInt(100),
@@ -444,33 +444,33 @@ func TestArbo(t *testing.T) {
 			},
 			b: []model.Order{
 				{
-					Ex:             model.Ku,
+					Ex:             model.ExchangeTypeKu,
 					Price:          decimal.NewFromInt(28),
 					EffectivePrice: decimal.NewFromInt(27),
 					Amount:         decimal.NewFromInt(3),
 				},
 				{
-					Ex:             model.Ga,
+					Ex:             model.ExchangeTypeGa,
 					Price:          decimal.NewFromInt(29),
 					EffectivePrice: decimal.NewFromInt(27),
 					Amount:         decimal.NewFromInt(1),
 				},
 				{
-					Ex:             model.Ga,
+					Ex:             model.ExchangeTypeGa,
 					Price:          decimal.NewFromInt(30),
 					EffectivePrice: decimal.NewFromInt(27),
 					Amount:         decimal.NewFromInt(10),
 				},
 			},
 			balances: map[model.ExchangeType]model.Balances{
-				model.ME: {
+				model.ExchangeTypeMe: {
 					XCH:  decimal.Zero,
 					USDT: decimal.NewFromInt(90),
 				},
-				model.Ku: bigBalance,
-				model.Hu: bigBalance,
-				model.Co: bigBalance,
-				model.Ga: bigBalance,
+				model.ExchangeTypeKu: bigBalance,
+				model.ExchangeTypeHu: bigBalance,
+				model.ExchangeTypeCo: bigBalance,
+				model.ExchangeTypeGa: bigBalance,
 			},
 			result: arboOut{
 				As: side{
@@ -493,32 +493,32 @@ func TestArbo(t *testing.T) {
 				WithdrawXCH:   m.Fees.WithdrawalFlatXCH,
 				Profit:        decimal.NewFromFloat(4.5).Sub(k.Fees.WithdrawalFlatUSDT).Sub(g.Fees.WithdrawalFlatUSDT).Sub(m.Fees.WithdrawalFlatXCH.Mul(decimal.NewFromInt(29))),
 				TotalBuyUSDT: map[model.ExchangeType]decimal.Decimal{
-					model.ME: decimal.NewFromInt(90), // balance
-					model.Ku: decimal.Zero,
-					model.Hu: decimal.Zero,
-					model.Co: decimal.Zero,
-					model.Ga: decimal.Zero,
+					model.ExchangeTypeMe: decimal.NewFromInt(90), // balance
+					model.ExchangeTypeKu: decimal.Zero,
+					model.ExchangeTypeHu: decimal.Zero,
+					model.ExchangeTypeCo: decimal.Zero,
+					model.ExchangeTypeGa: decimal.Zero,
 				},
 				TotalSellUSDT: map[model.ExchangeType]decimal.Decimal{
-					model.ME: decimal.Zero,
-					model.Ku: decimal.NewFromInt(81), // 3*27
-					model.Hu: decimal.Zero,
-					model.Co: decimal.Zero,
-					model.Ga: decimal.NewFromFloat(13.5), // 0.5*27
+					model.ExchangeTypeMe: decimal.Zero,
+					model.ExchangeTypeKu: decimal.NewFromInt(81), // 3*27
+					model.ExchangeTypeHu: decimal.Zero,
+					model.ExchangeTypeCo: decimal.Zero,
+					model.ExchangeTypeGa: decimal.NewFromFloat(13.5), // 0.5*27
 				},
 				TotalBuyXCH: map[model.ExchangeType]decimal.Decimal{
-					model.ME: decimal.NewFromFloat(3.5),
-					model.Ku: decimal.Zero,
-					model.Hu: decimal.Zero,
-					model.Co: decimal.Zero,
-					model.Ga: decimal.Zero,
+					model.ExchangeTypeMe: decimal.NewFromFloat(3.5),
+					model.ExchangeTypeKu: decimal.Zero,
+					model.ExchangeTypeHu: decimal.Zero,
+					model.ExchangeTypeCo: decimal.Zero,
+					model.ExchangeTypeGa: decimal.Zero,
 				},
 				TotalSellXCH: map[model.ExchangeType]decimal.Decimal{
-					model.ME: decimal.Zero,
-					model.Ku: decimal.NewFromInt(3),
-					model.Hu: decimal.Zero,
-					model.Co: decimal.Zero,
-					model.Ga: decimal.NewFromFloat(0.5),
+					model.ExchangeTypeMe: decimal.Zero,
+					model.ExchangeTypeKu: decimal.NewFromInt(3),
+					model.ExchangeTypeHu: decimal.Zero,
+					model.ExchangeTypeCo: decimal.Zero,
+					model.ExchangeTypeGa: decimal.NewFromFloat(0.5),
 				},
 			},
 		},

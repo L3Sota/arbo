@@ -49,7 +49,7 @@ func Book() ([]model.Order, []model.Order, error) {
 	a := make([]model.Order, 0, len(o.Asks))
 	for _, ask := range o.Asks {
 		o := model.Order{
-			Ex:     model.Co,
+			Ex:     model.ExchangeTypeCo,
 			Price:  decimal.RequireFromString(ask[0]),
 			Amount: decimal.RequireFromString(ask[1]),
 		}
@@ -59,7 +59,7 @@ func Book() ([]model.Order, []model.Order, error) {
 	b := make([]model.Order, 0, len(o.Bids))
 	for _, bid := range o.Bids {
 		o := model.Order{
-			Ex:     model.Co,
+			Ex:     model.ExchangeTypeCo,
 			Price:  decimal.RequireFromString(bid[0]),
 			Amount: decimal.RequireFromString(bid[1]),
 		}
