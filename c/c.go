@@ -2,7 +2,6 @@ package c
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 
 	"github.com/L3Sota/arbo/arb/model"
@@ -80,7 +79,7 @@ func Balances() (b model.Balances, err error) {
 	json.Unmarshal(accooutRespBody, &a)
 
 	if a.Code != 0 {
-		return b, errors.New(fmt.Sprintf("[Error %d] %v", a.Code, a.Message))
+		return b, fmt.Errorf("[Error %d] %v", a.Code, a.Message)
 	}
 
 	for currency, aa := range a.AssetBalance {
@@ -93,4 +92,48 @@ func Balances() (b model.Balances, err error) {
 	}
 
 	return b, nil
+}
+
+func Buy(price, size decimal.Decimal) (*OrderResp, error) {
+	//put limit order
+	limitOrderRespBody, err := PutLimitOrder(
+		size.String(),
+		price.String(),
+		"buy",
+		"XCHUSDT")
+	if err != nil {
+		return nil, err
+	}
+	var putLimitOrderResp OrderResp
+	if err := json.Unmarshal(limitOrderRespBody, &putLimitOrderResp); err != nil {
+		return nil, err
+	}
+	return &putLimitOrderResp, nil
+}
+
+func Sell(price, size decimal.Decimal) (*OrderResp, error) {
+	//put limit order
+	limitOrderRespBody, err := PutLimitOrder(
+		size.String(),
+		price.String(),
+		"sell",
+		"XCHUSDT")
+	if err != nil {
+		return nil, err
+	}
+	var putLimitOrderResp OrderResp
+	if err := json.Unmarshal(limitOrderRespBody, &putLimitOrderResp); err != nil {
+		return nil, err
+	}
+	return &putLimitOrderResp, nil
+}
+
+func OrderTest() {
+	putLimitOrderResp, err := Buy(decimal.NewFromInt(20),
+		decimal.NewFromInt(1).Div(decimal.NewFromInt(10)))
+	if err != nil {
+		fmt.Printf("PutLimitOrder Error: %v\n", err)
+		return
+	}
+	fmt.Printf("PutLimitOrder: %v\n", putLimitOrderResp)
 }

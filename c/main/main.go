@@ -7,7 +7,8 @@ import (
 )
 
 func main() {
-	balances()
+	c.OrderTest()
+	// balances()
 	// book()
 }
 
