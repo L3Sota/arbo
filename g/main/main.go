@@ -8,8 +8,8 @@ import (
 )
 
 func main() {
-	balances()
-	// g.OrderTest(config.Load())
+	// balances()
+	g.OrderTest(config.Load())
 	// g.QueryFee(config.Load())
 	// book()
 }

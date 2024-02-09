@@ -18,10 +18,11 @@ var (
 	}
 	AskAddition  = decimal.NewFromInt(1).Add(Fees.MakerTakerRatio)
 	BidReduction = decimal.NewFromInt(1).Sub(Fees.MakerTakerRatio)
+
+	client *gateapi.APIClient
 )
 
 func Book() ([]model.Order, []model.Order, error) {
-	client := gateapi.NewAPIClient(gateapi.NewConfiguration())
 	// uncomment the next line if your are testing against testnet
 	// client.ChangeBasePath("https://fx-api-testnet.gateio.ws/api/v4")
 
@@ -60,7 +61,7 @@ func Book() ([]model.Order, []model.Order, error) {
 }
 
 func Balances(c *config.Config) (b model.Balances, err error) {
-	client := gateapi.NewAPIClient(gateapi.NewConfiguration())
+	client = gateapi.NewAPIClient(gateapi.NewConfiguration())
 
 	ctx := context.WithValue(context.Background(),
 		gateapi.ContextGateAPIV4,
@@ -87,10 +88,7 @@ func Balances(c *config.Config) (b model.Balances, err error) {
 	return b, nil
 }
 
-// order: {Id:489126754641 Text:apiv4 AmendText:- CreateTime:1705482626 UpdateTime:1705482626 CreateTimeMs:1705482626977 UpdateTimeMs:1705482626977 Status:cancelled CurrencyPair:XCH_USDT Type:limit Account:spot Side:buy Amount:0.1 Price:20 TimeInForce:ioc Iceberg:0 AutoBorrow:false AutoRepay:false Left:0.1 FillPrice:0 FilledTotal:0 AvgDealPrice: Fee:0 FeeCurrency:XCH PointFee:0 GtFee:0 GtMakerFee:0 GtTakerFee:0 GtDiscount:false RebatedFee:0 RebatedFeeCurrency:USDT StpId:0 StpAct: FinishAs:ioc}
-func OrderTest(c *config.Config) {
-	client := gateapi.NewAPIClient(gateapi.NewConfiguration())
-
+func Buy(price, size decimal.Decimal, c *config.Config) (gateapi.Order, error) {
 	ctx := context.WithValue(context.Background(),
 		gateapi.ContextGateAPIV4,
 		gateapi.GateAPIV4{
@@ -105,10 +103,42 @@ func OrderTest(c *config.Config) {
 		Type:         "limit",
 		Account:      "spot",
 		Side:         "buy",
-		Amount:       decimal.NewFromInt(1).Div(decimal.NewFromInt(10)).String(), // Amount in XCH (base currency)
-		Price:        decimal.NewFromInt(20).String(),                            // Price in USDT (quote currency)
-		TimeInForce:  "ioc",
+		Amount:       size.String(),  // Amount in XCH (base currency)
+		Price:        price.String(), // Price in USDT (quote currency)
+		TimeInForce:  "gtc",
 	})
+
+	return o, err
+}
+
+func Sell(price, size decimal.Decimal, c *config.Config) (gateapi.Order, error) {
+	ctx := context.WithValue(context.Background(),
+		gateapi.ContextGateAPIV4,
+		gateapi.GateAPIV4{
+			Key:    c.GKey,
+			Secret: c.GSec,
+		},
+	)
+
+	// min order size 1 USDT
+	o, _, err := client.SpotApi.CreateOrder(ctx, gateapi.Order{
+		CurrencyPair: "XCH_USDT",
+		Type:         "limit",
+		Account:      "spot",
+		Side:         "sell",
+		Amount:       size.String(),  // Amount in XCH (base currency)
+		Price:        price.String(), // Price in USDT (quote currency)
+		TimeInForce:  "gtc",
+	})
+
+	return o, err
+}
+
+// order: {Id:489126754641 Text:apiv4 AmendText:- CreateTime:1705482626 UpdateTime:1705482626 CreateTimeMs:1705482626977 UpdateTimeMs:1705482626977 Status:cancelled CurrencyPair:XCH_USDT Type:limit Account:spot Side:buy Amount:0.1 Price:20 TimeInForce:ioc Iceberg:0 AutoBorrow:false AutoRepay:false Left:0.1 FillPrice:0 FilledTotal:0 AvgDealPrice: Fee:0 FeeCurrency:XCH PointFee:0 GtFee:0 GtMakerFee:0 GtTakerFee:0 GtDiscount:false RebatedFee:0 RebatedFeeCurrency:USDT StpId:0 StpAct: FinishAs:ioc}
+func OrderTest(c *config.Config) {
+	client = gateapi.NewAPIClient(gateapi.NewConfiguration())
+
+	o, err := Buy(decimal.NewFromInt(20), decimal.NewFromInt(1).Div(decimal.NewFromInt(10)), c)
 
 	if err != nil {
 		fmt.Println(err)
@@ -116,7 +146,6 @@ func OrderTest(c *config.Config) {
 	}
 
 	fmt.Printf("order: %+v\n", o)
-
 }
 
 // {14541031 0.002 0.002 false 0 0 0.18 1 0.0005 0.00015 0.00016 -0.00015}
