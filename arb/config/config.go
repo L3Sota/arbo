@@ -17,6 +17,8 @@ type Config struct {
 	CId  string `split_words:"true"`
 	CSec string `split_words:"true"`
 
+	ExecuteTrades bool `split_words:"true"`
+
 	loaded bool
 }
 

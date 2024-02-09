@@ -10,6 +10,7 @@ import (
 	"github.com/L3Sota/arbo/g"
 	"github.com/L3Sota/arbo/k"
 	"github.com/L3Sota/arbo/m"
+	"github.com/gateio/gateapi-go/v6"
 	"github.com/gregdel/pushover"
 	"github.com/shopspring/decimal"
 	"golang.org/x/sync/errgroup"
@@ -20,7 +21,7 @@ type side struct {
 	I             int
 	HeadAmount    decimal.Decimal
 	HeadAllowance decimal.Decimal
-	LastPrice     decimal.Decimal
+	LastPrice     [model.ExchangeTypeMax]decimal.Decimal
 	Move          bool
 }
 
@@ -174,8 +175,8 @@ func GatherBalancesP(conf *config.Config) [model.ExchangeTypeMax]model.Balances 
 	return m
 }
 
-func Book(c *config.Config) {
-	bb := GatherBalancesP(c)
+func Book(conf *config.Config) {
+	bb := GatherBalancesP(conf)
 
 	for e, b := range bb {
 		if b.XCH.IsZero() && b.USDT.IsZero() {
@@ -187,22 +188,33 @@ func Book(c *config.Config) {
 
 	a, b := GatherBooksP()
 
-	as, bs, totalTradeXCH, gain, withdrawUSDT, withdrawXCH, profit, totalBuyUSDT, totalSellUSDT, totalBuyXCH, totalSellXCH := arbo(a, b, bb, c)
+	as, bs, totalTradeXCH, gain, withdrawUSDT, withdrawXCH, profit, totalBuyUSDT, totalSellUSDT, totalBuyXCH, totalSellXCH := arbo(a, b, bb, conf)
 	template := `Buy $ %v , XCH %v / Sell $ %v , XCH %v ; Asks %v - %v / Bids %v - %v ; trade %v XCH (g %v - %v XCH - %v USDT = p %v)`
 	msg := fmt.Sprintf(template,
 		totalBuyUSDT, totalBuyXCH, totalSellUSDT, totalSellXCH, a[0].Price, as.LastPrice, b[0].Price, bs.LastPrice, totalTradeXCH, gain, withdrawXCH, withdrawUSDT, profit)
 
-	if profit.IsPositive() && c.PEnable {
-		p := pushover.New(c.PKey)
-		r := pushover.NewRecipient(c.PUser)
-		resp, err := p.SendMessage(&pushover.Message{
-			Message: msg,
-		}, r)
-		if err != nil {
-			fmt.Print(err)
-			return
+	if profit.IsPositive() {
+		if conf.ExecuteTrades {
+			kOrderId, cOrder, gOrder, err := trade(totalBuyXCH, totalSellXCH, as.LastPrice, bs.LastPrice, conf)
+			if err != nil {
+				fmt.Println("trade err:", err)
+			} else {
+				fmt.Printf("k: %v\nc: %+v\ng: %+v\n", kOrderId, cOrder, gOrder)
+			}
 		}
-		fmt.Println(resp.String())
+
+		if conf.PEnable {
+			p := pushover.New(conf.PKey)
+			r := pushover.NewRecipient(conf.PUser)
+			resp, err := p.SendMessage(&pushover.Message{
+				Message: msg,
+			}, r)
+			if err != nil {
+				fmt.Println("push err:", err)
+			} else {
+				fmt.Println(resp.String())
+			}
+		}
 	}
 
 	fmt.Println("===")
@@ -222,7 +234,7 @@ func Book(c *config.Config) {
 	fmt.Println("===")
 	fmt.Println(msg)
 
-	as, bs, totalTradeXCH, gain, withdrawUSDT, withdrawXCH, profit, totalBuyUSDT, totalSellUSDT, totalBuyXCH, totalSellXCH = arbo(a, b, ignoreBalances, c)
+	as, bs, totalTradeXCH, gain, withdrawUSDT, withdrawXCH, profit, totalBuyUSDT, totalSellUSDT, totalBuyXCH, totalSellXCH = arbo(a, b, ignoreBalances, conf)
 
 	msg = fmt.Sprintf(template,
 		totalBuyUSDT, totalBuyXCH, totalSellUSDT, totalSellXCH, a[0].Price, as.LastPrice, b[0].Price, bs.LastPrice, totalTradeXCH, gain, withdrawXCH, withdrawUSDT, profit)
@@ -251,7 +263,7 @@ func arbo(a, b []model.Order, balances [model.ExchangeTypeMax]model.Balances, c 
 	for _, s := range sides {
 		if len(s.Book) > 0 {
 			s.HeadAmount = s.Book[0].Amount
-			s.LastPrice = s.Book[0].Price
+			s.LastPrice = [model.ExchangeTypeMax]decimal.Decimal{s.Book[0].Price, s.Book[0].Price, s.Book[0].Price, s.Book[0].Price, s.Book[0].Price}
 		}
 	}
 
@@ -296,7 +308,7 @@ func arbo(a, b []model.Order, balances [model.ExchangeTypeMax]model.Balances, c 
 		totalSellXCH[bb.Ex] = totalSellXCH[bb.Ex].Add(tradeAmount)
 
 		for _, s := range sides {
-			s.LastPrice = s.Book[s.I].Price
+			s.LastPrice[s.Book[s.I].Ex] = s.Book[s.I].Price
 			if s.Move {
 				s.I++
 			}
@@ -305,9 +317,11 @@ func arbo(a, b []model.Order, balances [model.ExchangeTypeMax]model.Balances, c 
 
 	// buy XCH -> withdraw XCH
 	withdrawXCH := decimal.Zero
+	withdrawXCHAsUSDT := decimal.Zero
 	for e, b := range totalBuyUSDT {
 		if b.IsPositive() {
 			withdrawXCH = withdrawXCH.Add(fees[e].WithdrawalFlatXCH)
+			withdrawXCHAsUSDT = withdrawXCHAsUSDT.Add(fees[e].WithdrawalFlatXCH.Mul(bs.LastPrice[e]))
 		}
 	}
 	// sell XCH -> withdraw USDT
@@ -318,9 +332,105 @@ func arbo(a, b []model.Order, balances [model.ExchangeTypeMax]model.Balances, c 
 		}
 	}
 
-	profit := gain.Sub(withdrawUSDT).Sub(withdrawXCH.Mul(bs.LastPrice))
+	profit := gain.Sub(withdrawUSDT).Sub(withdrawXCHAsUSDT)
 
 	return *as, *bs, totalTradeXCH, gain, withdrawUSDT, withdrawXCH, profit, totalBuyUSDT, totalSellUSDT, totalBuyXCH, totalSellXCH
+}
+
+func trade(totalBuyXCH, totalSellXCH, askPrices, bidPrices [model.ExchangeTypeMax]decimal.Decimal, conf *config.Config) (string, *c.OrderResp, *gateapi.Order, error) {
+	var (
+		kOrderId string
+		cOrder   *c.OrderResp
+		gOrder   gateapi.Order
+	)
+
+	eg, _ := errgroup.WithContext(context.Background())
+
+	// if totalBuyXCH[model.ExchangeTypeMe].IsPositive() {
+	// 	eg.Go(func() error {
+	// 		// buy
+	// 		return nil
+	// 	})
+	// } else if totalSellXCH[model.ExchangeTypeMe].IsPositive() {
+	// 	eg.Go(func() error {
+	// 		// sell
+	// 		return nil
+	// 	})
+	// }
+	if totalBuyXCH[model.ExchangeTypeKu].IsPositive() {
+		eg.Go(func() error {
+			oid, err := k.Buy(askPrices[model.ExchangeTypeKu], totalBuyXCH[model.ExchangeTypeKu])
+			if err != nil {
+				return fmt.Errorf("k buy: %w", err)
+			}
+			kOrderId = oid
+			return nil
+		})
+	} else if totalSellXCH[model.ExchangeTypeKu].IsPositive() {
+		eg.Go(func() error {
+			oid, err := k.Sell(bidPrices[model.ExchangeTypeKu], totalBuyXCH[model.ExchangeTypeKu])
+			if err != nil {
+				return fmt.Errorf("k sell: %w", err)
+			}
+			kOrderId = oid
+			return nil
+		})
+	}
+	// if totalBuyXCH[model.ExchangeTypeHu].IsPositive() {
+	// 	eg.Go(func() error {
+	// 		// buy
+	// 		return nil
+	// 	})
+	// } else if totalSellXCH[model.ExchangeTypeHu].IsPositive() {
+	// 	eg.Go(func() error {
+	// 		// sell
+	// 		return nil
+	// 	})
+	// }
+	if totalBuyXCH[model.ExchangeTypeCo].IsPositive() {
+		eg.Go(func() error { // TODO from here errors
+			resp, err := c.Buy(askPrices[model.ExchangeTypeCo], totalBuyXCH[model.ExchangeTypeCo])
+			if err != nil {
+				return fmt.Errorf("c buy: %w", err)
+			}
+			cOrder = resp
+			return nil
+		})
+	} else if totalSellXCH[model.ExchangeTypeCo].IsPositive() {
+		eg.Go(func() error {
+			resp, err := c.Sell(bidPrices[model.ExchangeTypeCo], totalSellXCH[model.ExchangeTypeCo])
+			if err != nil {
+				return fmt.Errorf("c sell: %w", err)
+			}
+			cOrder = resp
+			return nil
+		})
+	}
+	if totalBuyXCH[model.ExchangeTypeGa].IsPositive() {
+		eg.Go(func() error {
+			resp, err := g.Buy(askPrices[model.ExchangeTypeGa], totalBuyXCH[model.ExchangeTypeGa], conf)
+			if err != nil {
+				return fmt.Errorf("g buy: %w", err)
+			}
+			gOrder = resp
+			return nil
+		})
+	} else if totalSellXCH[model.ExchangeTypeGa].IsPositive() {
+		eg.Go(func() error {
+			resp, err := g.Sell(bidPrices[model.ExchangeTypeGa], totalSellXCH[model.ExchangeTypeGa], conf)
+			if err != nil {
+				return fmt.Errorf("g sell: %w", err)
+			}
+			gOrder = resp
+			return nil
+		})
+	}
+
+	if err := eg.Wait(); err != nil {
+		return "", nil, nil, err
+	}
+
+	return kOrderId, cOrder, &gOrder, nil
 }
 
 func merge(asc bool, xs ...[]model.Order) []model.Order {

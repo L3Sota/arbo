@@ -41,13 +41,13 @@ func TestArbo(t *testing.T) {
 		As: side{
 			I:          0,
 			HeadAmount: decimal.Zero,
-			LastPrice:  decimal.Zero,
+			LastPrice:  empty,
 			Move:       false,
 		},
 		Bs: side{
 			I:          0,
 			HeadAmount: decimal.Zero,
-			LastPrice:  decimal.Zero,
+			LastPrice:  empty,
 			Move:       false,
 		},
 		TotalTradeXCH: decimal.Zero,
@@ -91,9 +91,9 @@ func TestArbo(t *testing.T) {
 			result: func() arboOut {
 				out := defaultOut
 				out.As.HeadAmount = decimal.NewFromInt(1)
-				out.As.LastPrice = decimal.NewFromInt(28)
+				out.As.LastPrice = [model.ExchangeTypeMax]decimal.Decimal{decimal.NewFromInt(28), decimal.NewFromInt(28), decimal.NewFromInt(28), decimal.NewFromInt(28), decimal.NewFromInt(28)}
 				out.Bs.HeadAmount = decimal.NewFromInt(1)
-				out.Bs.LastPrice = decimal.NewFromInt(31)
+				out.Bs.LastPrice = [model.ExchangeTypeMax]decimal.Decimal{decimal.NewFromInt(31), decimal.NewFromInt(31), decimal.NewFromInt(31), decimal.NewFromInt(31), decimal.NewFromInt(31)}
 				return out
 			}(),
 		},
@@ -118,13 +118,13 @@ func TestArbo(t *testing.T) {
 				As: side{
 					I:          1,
 					HeadAmount: decimal.Zero,
-					LastPrice:  decimal.NewFromInt(20),
+					LastPrice:  [model.ExchangeTypeMax]decimal.Decimal{decimal.NewFromInt(20), decimal.NewFromInt(20), decimal.NewFromInt(20), decimal.NewFromInt(20), decimal.NewFromInt(20)},
 					Move:       true,
 				},
 				Bs: side{
 					I:          0,
 					HeadAmount: decimal.NewFromInt(2), // 3 - 1
-					LastPrice:  decimal.NewFromInt(28),
+					LastPrice:  [model.ExchangeTypeMax]decimal.Decimal{decimal.NewFromInt(28), decimal.NewFromInt(28), decimal.NewFromInt(28), decimal.NewFromInt(28), decimal.NewFromInt(28)},
 					Move:       false,
 				},
 				TotalTradeXCH: decimal.NewFromInt(1),
@@ -189,13 +189,13 @@ func TestArbo(t *testing.T) {
 				As: side{
 					I:          1,
 					HeadAmount: decimal.NewFromInt(1),
-					LastPrice:  decimal.NewFromInt(21),
+					LastPrice:  [model.ExchangeTypeMax]decimal.Decimal{decimal.NewFromInt(21), decimal.NewFromInt(20), decimal.NewFromInt(20), decimal.NewFromInt(20), decimal.NewFromInt(20)},
 					Move:       false,
 				},
 				Bs: side{
 					I:          1,
 					HeadAmount: decimal.Zero,
-					LastPrice:  decimal.NewFromInt(28),
+					LastPrice:  [model.ExchangeTypeMax]decimal.Decimal{decimal.NewFromInt(28), decimal.NewFromInt(28), decimal.NewFromInt(28), decimal.NewFromInt(28), decimal.NewFromInt(28)},
 					Move:       true,
 				},
 				TotalTradeXCH: decimal.NewFromInt(3),
@@ -266,20 +266,20 @@ func TestArbo(t *testing.T) {
 				As: side{
 					I:          2,
 					HeadAmount: decimal.Zero,
-					LastPrice:  decimal.NewFromInt(21),
+					LastPrice:  [model.ExchangeTypeMax]decimal.Decimal{decimal.NewFromInt(21), decimal.NewFromInt(20), decimal.NewFromInt(20), decimal.NewFromInt(20), decimal.NewFromInt(20)},
 					Move:       true,
 				},
 				Bs: side{
 					I:          2,
 					HeadAmount: decimal.Zero,
-					LastPrice:  decimal.NewFromInt(29),
+					LastPrice:  [model.ExchangeTypeMax]decimal.Decimal{decimal.NewFromInt(28), decimal.NewFromInt(28), decimal.NewFromInt(29), decimal.NewFromInt(28), decimal.NewFromInt(28)},
 					Move:       true,
 				},
 				TotalTradeXCH: decimal.NewFromInt(4),
 				Gain:          decimal.NewFromInt(5), // 2 + 2 + 1
 				WithdrawUSDT:  k.Fees.WithdrawalFlatUSDT,
 				WithdrawXCH:   m.Fees.WithdrawalFlatXCH,
-				Profit:        decimal.NewFromInt(5).Sub(k.Fees.WithdrawalFlatUSDT).Sub(m.Fees.WithdrawalFlatXCH.Mul(decimal.NewFromInt(29))),
+				Profit:        decimal.NewFromInt(5).Sub(k.Fees.WithdrawalFlatUSDT).Sub(m.Fees.WithdrawalFlatXCH.Mul(decimal.NewFromInt(28))),
 				TotalBuyUSDT: [model.ExchangeTypeMax]decimal.Decimal{
 					decimal.NewFromInt(103), // 25 + 3*26
 					decimal.Zero,
@@ -355,20 +355,20 @@ func TestArbo(t *testing.T) {
 				As: side{
 					I:          2,
 					HeadAmount: decimal.Zero,
-					LastPrice:  decimal.NewFromInt(21),
+					LastPrice:  [model.ExchangeTypeMax]decimal.Decimal{decimal.NewFromInt(21), decimal.NewFromInt(20), decimal.NewFromInt(20), decimal.NewFromInt(20), decimal.NewFromInt(20)},
 					Move:       true,
 				},
 				Bs: side{
 					I:          2,
 					HeadAmount: decimal.Zero,
-					LastPrice:  decimal.NewFromInt(29),
+					LastPrice:  [model.ExchangeTypeMax]decimal.Decimal{decimal.NewFromInt(28), decimal.NewFromInt(28), decimal.NewFromInt(29), decimal.NewFromInt(28), decimal.NewFromInt(28)},
 					Move:       true,
 				},
 				TotalTradeXCH: decimal.NewFromInt(4),
 				Gain:          decimal.NewFromInt(5), // 2 + 2 + 1
 				WithdrawUSDT:  k.Fees.WithdrawalFlatUSDT,
 				WithdrawXCH:   m.Fees.WithdrawalFlatXCH,
-				Profit:        decimal.NewFromInt(5).Sub(k.Fees.WithdrawalFlatUSDT).Sub(m.Fees.WithdrawalFlatXCH.Mul(decimal.NewFromInt(29))),
+				Profit:        decimal.NewFromInt(5).Sub(k.Fees.WithdrawalFlatUSDT).Sub(m.Fees.WithdrawalFlatXCH.Mul(decimal.NewFromInt(28))),
 				TotalBuyUSDT: [model.ExchangeTypeMax]decimal.Decimal{
 					decimal.NewFromInt(103), // 25 + 3*26
 					decimal.Zero,
@@ -477,21 +477,21 @@ func TestArbo(t *testing.T) {
 					I:             2,
 					HeadAmount:    decimal.NewFromFloat(0.5),
 					HeadAllowance: decimal.NewFromFloat(0.5),
-					LastPrice:     decimal.NewFromInt(21),
+					LastPrice:     [model.ExchangeTypeMax]decimal.Decimal{decimal.NewFromInt(21), decimal.NewFromInt(20), decimal.NewFromInt(20), decimal.NewFromInt(20), decimal.NewFromInt(20)},
 					Move:          true,
 				},
 				Bs: side{
 					I:             1,
 					HeadAmount:    decimal.NewFromFloat(0.5),
 					HeadAllowance: big.Mul(g.BidReduction),
-					LastPrice:     decimal.NewFromInt(29),
+					LastPrice:     [model.ExchangeTypeMax]decimal.Decimal{decimal.NewFromInt(28), decimal.NewFromInt(28), decimal.NewFromInt(28), decimal.NewFromInt(28), decimal.NewFromInt(29)},
 					Move:          false,
 				},
 				TotalTradeXCH: decimal.NewFromFloat(3.5),
 				Gain:          decimal.NewFromFloat(4.5), // 2 + 2 + 0.5
 				WithdrawUSDT:  k.Fees.WithdrawalFlatUSDT.Add(g.Fees.WithdrawalFlatUSDT),
 				WithdrawXCH:   m.Fees.WithdrawalFlatXCH,
-				Profit:        decimal.NewFromFloat(4.5).Sub(k.Fees.WithdrawalFlatUSDT).Sub(g.Fees.WithdrawalFlatUSDT).Sub(m.Fees.WithdrawalFlatXCH.Mul(decimal.NewFromInt(29))),
+				Profit:        decimal.NewFromFloat(4.5).Sub(k.Fees.WithdrawalFlatUSDT).Sub(g.Fees.WithdrawalFlatUSDT).Sub(m.Fees.WithdrawalFlatXCH.Mul(decimal.NewFromInt(28))),
 				TotalBuyUSDT: [model.ExchangeTypeMax]decimal.Decimal{
 					decimal.NewFromInt(90), // balance
 					decimal.Zero,
