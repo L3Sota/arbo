@@ -18,6 +18,8 @@ var (
 	}
 	AskAddition  = decimal.NewFromInt(1).Add(Fees.MakerTakerRatio)
 	BidReduction = decimal.NewFromInt(1).Sub(Fees.MakerTakerRatio)
+
+	apiService *kucoin.ApiService
 )
 
 func Book() ([]model.Order, []model.Order, error) {
@@ -58,14 +60,14 @@ func Book() ([]model.Order, []model.Order, error) {
 }
 
 func Balances(c *config.Config) (b model.Balances, err error) {
-	s := kucoin.NewApiService(
+	apiService = kucoin.NewApiService(
 		kucoin.ApiKeyOption(c.KKey),
 		kucoin.ApiKeyVersionOption(kucoin.ApiKeyVersionV2),
 		kucoin.ApiPassPhraseOption(c.KPass),
 		kucoin.ApiSecretOption(c.KSec),
 	)
 
-	resp, err := s.Accounts("", "")
+	resp, err := apiService.Accounts("", "")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -90,17 +92,8 @@ func Balances(c *config.Config) (b model.Balances, err error) {
 	return b, nil
 }
 
-// {65a8928fcf1c7f00074b0ea7}
-// {Id:65a8928fcf1c7f00074b0ea7 Symbol:XCH-USDT OpType:DEAL Type:limit Side:buy Price:20 Size:0.1 Funds:0 DealFunds:0 DealSize:0 Fee:0 FeeCurrency:USDT Stp: Stop: StopTriggered:false StopPrice:0 TimeInForce:IOC PostOnly:false Hidden:false IceBerg:false VisibleSize:0 CancelAfter:0 Channel:API ClientOid:d6c51d3e-2f72-4e38-a9a6-2afc14041e2e Remark: Tags: IsActive:false CancelExist:true CreatedAt:1705546383349 TradeType:TRADE}
-func OrderTest(c *config.Config) {
-	s := kucoin.NewApiService(
-		kucoin.ApiKeyOption(c.KKey),
-		kucoin.ApiKeyVersionOption(kucoin.ApiKeyVersionV2),
-		kucoin.ApiPassPhraseOption(c.KPass),
-		kucoin.ApiSecretOption(c.KSec),
-	)
-
-	resp, err := s.CreateOrder(&kucoin.CreateOrderModel{
+func Buy(price, size decimal.Decimal) (string, error) {
+	resp, err := apiService.CreateOrder(&kucoin.CreateOrderModel{
 		// BASE PARAMETERS
 		ClientOid: uuid.New().String(),
 		Side:      "buy",
@@ -108,24 +101,64 @@ func OrderTest(c *config.Config) {
 		Type:      "limit",
 
 		// LIMIT ORDER PARAMETERS
-		Price:       decimal.NewFromInt(20).String(),
-		Size:        decimal.NewFromInt(1).Div(decimal.NewFromInt(10)).String(),
-		TimeInForce: "IOC",
+		Price:       price.String(),
+		Size:        size.String(),
+		TimeInForce: "GTC",
 	})
 	if err != nil {
-		fmt.Println(err)
-		return
+		return "", err
 	}
 
 	var o kucoin.CreateOrderResultModel
 	if err := resp.ReadData(&o); err != nil {
-		fmt.Println(err)
+		return "", err
+	}
+
+	return o.OrderId, nil
+}
+
+func Sell(price, size decimal.Decimal) (string, error) {
+	resp, err := apiService.CreateOrder(&kucoin.CreateOrderModel{
+		// BASE PARAMETERS
+		ClientOid: uuid.New().String(),
+		Side:      "sell",
+		Symbol:    "XCH-USDT",
+		Type:      "limit",
+
+		// LIMIT ORDER PARAMETERS
+		Price:       price.String(),
+		Size:        size.String(),
+		TimeInForce: "GTC",
+	})
+	if err != nil {
+		return "", err
+	}
+
+	var o kucoin.CreateOrderResultModel
+	if err := resp.ReadData(&o); err != nil {
+		return "", err
+	}
+
+	return o.OrderId, nil
+}
+
+// {65a8928fcf1c7f00074b0ea7}
+// {Id:65a8928fcf1c7f00074b0ea7 Symbol:XCH-USDT OpType:DEAL Type:limit Side:buy Price:20 Size:0.1 Funds:0 DealFunds:0 DealSize:0 Fee:0 FeeCurrency:USDT Stp: Stop: StopTriggered:false StopPrice:0 TimeInForce:IOC PostOnly:false Hidden:false IceBerg:false VisibleSize:0 CancelAfter:0 Channel:API ClientOid:d6c51d3e-2f72-4e38-a9a6-2afc14041e2e Remark: Tags: IsActive:false CancelExist:true CreatedAt:1705546383349 TradeType:TRADE}
+func OrderTest(c *config.Config) {
+	apiService = kucoin.NewApiService(
+		kucoin.ApiKeyOption(c.KKey),
+		kucoin.ApiKeyVersionOption(kucoin.ApiKeyVersionV2),
+		kucoin.ApiPassPhraseOption(c.KPass),
+		kucoin.ApiSecretOption(c.KSec),
+	)
+
+	oid, err := Buy(decimal.NewFromInt(20), decimal.NewFromInt(1).Div(decimal.NewFromInt(10)))
+	fmt.Println(oid, err)
+	if err != nil {
 		return
 	}
 
-	fmt.Println(o)
-
-	resp, err = s.Order(o.OrderId)
+	resp, err := apiService.Order(oid)
 	if err != nil {
 		fmt.Println(err)
 		return
