@@ -22,6 +22,10 @@ var (
 	client *gateapi.APIClient
 )
 
+func LoadClient() {
+	client = gateapi.NewAPIClient(gateapi.NewConfiguration())
+}
+
 func Book() ([]model.Order, []model.Order, error) {
 	// uncomment the next line if your are testing against testnet
 	// client.ChangeBasePath("https://fx-api-testnet.gateio.ws/api/v4")
@@ -61,8 +65,6 @@ func Book() ([]model.Order, []model.Order, error) {
 }
 
 func Balances(c *config.Config) (b model.Balances, err error) {
-	client = gateapi.NewAPIClient(gateapi.NewConfiguration())
-
 	ctx := context.WithValue(context.Background(),
 		gateapi.ContextGateAPIV4,
 		gateapi.GateAPIV4{
@@ -136,8 +138,6 @@ func Sell(price, size decimal.Decimal, c *config.Config) (gateapi.Order, error) 
 
 // order: {Id:489126754641 Text:apiv4 AmendText:- CreateTime:1705482626 UpdateTime:1705482626 CreateTimeMs:1705482626977 UpdateTimeMs:1705482626977 Status:cancelled CurrencyPair:XCH_USDT Type:limit Account:spot Side:buy Amount:0.1 Price:20 TimeInForce:ioc Iceberg:0 AutoBorrow:false AutoRepay:false Left:0.1 FillPrice:0 FilledTotal:0 AvgDealPrice: Fee:0 FeeCurrency:XCH PointFee:0 GtFee:0 GtMakerFee:0 GtTakerFee:0 GtDiscount:false RebatedFee:0 RebatedFeeCurrency:USDT StpId:0 StpAct: FinishAs:ioc}
 func OrderTest(c *config.Config) {
-	client = gateapi.NewAPIClient(gateapi.NewConfiguration())
-
 	o, err := Buy(decimal.NewFromInt(20), decimal.NewFromInt(1).Div(decimal.NewFromInt(10)), c)
 
 	if err != nil {
@@ -151,8 +151,6 @@ func OrderTest(c *config.Config) {
 // {14541031 0.002 0.002 false 0 0 0.18 1 0.0005 0.00015 0.00016 -0.00015}
 // ^ 0.2% maker taker
 func QueryFee(c *config.Config) {
-	client := gateapi.NewAPIClient(gateapi.NewConfiguration())
-
 	ctx := context.WithValue(context.Background(),
 		gateapi.ContextGateAPIV4,
 		gateapi.GateAPIV4{
