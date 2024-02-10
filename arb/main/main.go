@@ -25,7 +25,7 @@ func main() {
 		arb.Book(conf)
 
 		select {
-		case t <- deadline.C:
+		case t := <-deadline.C:
 			fmt.Println("deadline reached, ending at " + t.String())
 			return
 		case <-ticker.C:
