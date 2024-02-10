@@ -3,10 +3,12 @@ package main
 import (
 	"fmt"
 
+	"github.com/L3Sota/arbo/arb/config"
 	"github.com/L3Sota/arbo/c"
 )
 
 func main() {
+	c.LoadClient(config.Load())
 	c.OrderTest()
 	// balances()
 	// book()

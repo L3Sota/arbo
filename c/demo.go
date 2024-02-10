@@ -16,7 +16,17 @@ import (
 	"github.com/L3Sota/arbo/arb/config"
 )
 
-var c = config.Load()
+var (
+	id     string
+	secret string
+	client *http.Client
+)
+
+func LoadClient(conf *config.Config) {
+	id = conf.CId
+	secret = conf.CSec
+	client = &http.Client{}
+}
 
 // APIHTTPHOST api host
 const APIHTTPHOST = "https://api.coinex.com"
@@ -133,9 +143,8 @@ func httpRequest(method, urlHost string, reqParameters map[string]interface{}) (
 		params[k] = v
 	}
 	currentMilliseconds := fmt.Sprintf("%d", time.Now().UnixNano()/1e6)
-	params["access_id"] = c.CId
+	params["access_id"] = id
 	params["tonce"] = currentMilliseconds
-	client := &http.Client{}
 	var reqBody io.Reader
 	if method == "POST" {
 		paramsJSON, err := json.Marshal(params)
@@ -159,7 +168,7 @@ func httpRequest(method, urlHost string, reqParameters map[string]interface{}) (
 	for _, k := range keys {
 		queryParamsString += fmt.Sprintf("%s=%s&", k, interfaceToString(params[k]))
 	}
-	toEncodeparamsString := queryParamsString + "secret_key=" + c.CSec
+	toEncodeparamsString := queryParamsString + "secret_key=" + secret
 	req.Header.Set("Content-Type", CONTENTTYPE)
 	req.Header.Set("User-Agent", USERAGENT)
 	req.Header.Set("authorization", generateAuthorization(toEncodeparamsString))
