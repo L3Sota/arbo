@@ -11,7 +11,6 @@ import (
 	"github.com/L3Sota/arbo/k"
 	"github.com/L3Sota/arbo/m"
 	"github.com/gateio/gateapi-go/v6"
-	"github.com/gregdel/pushover"
 	"github.com/shopspring/decimal"
 	"golang.org/x/sync/errgroup"
 )
@@ -25,26 +24,30 @@ type side struct {
 	Move          bool
 }
 
-var fees = [model.ExchangeTypeMax]model.Fees{
-	m.Fees,
-	k.Fees,
-	{}, // TODO h.Fees,
-	c.Fees,
-	g.Fees,
-}
+var (
+	fees = [model.ExchangeTypeMax]model.Fees{
+		m.Fees,
+		k.Fees,
+		{}, // TODO h.Fees,
+		c.Fees,
+		g.Fees,
+	}
 
-var big = decimal.New(1, 10)
-var bigBalance = model.Balances{
-	XCH:  big,
-	USDT: big,
-}
-var ignoreBalances = [model.ExchangeTypeMax]model.Balances{
-	bigBalance,
-	bigBalance,
-	bigBalance,
-	bigBalance,
-	bigBalance,
-}
+	big        = decimal.New(1, 10)
+	bigBalance = model.Balances{
+		XCH:  big,
+		USDT: big,
+	}
+	ignoreBalances = [model.ExchangeTypeMax]model.Balances{
+		bigBalance,
+		bigBalance,
+		bigBalance,
+		bigBalance,
+		bigBalance,
+	}
+
+	bb [model.ExchangeTypeMax]model.Balances
+)
 
 // gather price information from all exchanges
 // REST to get initial book state
@@ -85,7 +88,7 @@ func GatherBooks() ([]model.Order, []model.Order) {
 	return a, b
 }
 
-func GatherBooksP() ([]model.Order, []model.Order) {
+func GatherBooksP() ([]model.Order, []model.Order, error) {
 	var ma, ka, ga, ca, mb, kb, gb, cb []model.Order
 	eg, _ := errgroup.WithContext(context.Background())
 	eg.Go(func() error {
@@ -125,18 +128,16 @@ func GatherBooksP() ([]model.Order, []model.Order) {
 		return nil
 	})
 	if err := eg.Wait(); err != nil {
-		fmt.Println(err)
-		return nil, nil
+		return nil, nil, err
 	}
 
 	a := merge(true, ma, ka, ga, ca)
 	b := merge(false, mb, kb, gb, cb)
 
-	return a, b
+	return a, b, nil
 }
 
-func GatherBalancesP(conf *config.Config) [model.ExchangeTypeMax]model.Balances {
-	m := [model.ExchangeTypeMax]model.Balances{}
+func GatherBalancesP(conf *config.Config) (m [model.ExchangeTypeMax]model.Balances, err error) {
 	eg, _ := errgroup.WithContext(context.Background())
 	eg.Go(func() error {
 		m[model.ExchangeTypeMe] = model.Balances{}
@@ -168,15 +169,22 @@ func GatherBalancesP(conf *config.Config) [model.ExchangeTypeMax]model.Balances 
 	})
 
 	if err := eg.Wait(); err != nil {
-		fmt.Println(err)
-		return m
+		return m, err
 	}
 
-	return m
+	return m, nil
 }
 
-func Book(conf *config.Config) {
-	bb := GatherBalancesP(conf)
+func Book(gatherBalances bool, conf *config.Config) (bool, []string, error) {
+	messages := make([]string, 0, 2)
+
+	if gatherBalances {
+		balances, err := GatherBalancesP(conf)
+		if err != nil {
+			return false, nil, fmt.Errorf("balances: %w", err)
+		}
+		bb = balances
+	}
 
 	for e, b := range bb {
 		if b.XCH.IsZero() && b.USDT.IsZero() {
@@ -186,35 +194,32 @@ func Book(conf *config.Config) {
 
 	fmt.Println(bb)
 
-	a, b := GatherBooksP()
+	a, b, err := GatherBooksP()
+	if err != nil {
+		return false, nil, fmt.Errorf("books: %w", err)
+	}
 
 	as, bs, totalTradeXCH, gain, withdrawUSDT, withdrawXCH, profit, totalBuyUSDT, totalSellUSDT, totalBuyXCH, totalSellXCH := arbo(a, b, bb, conf)
 	template := `Buy $ %v , XCH %v / Sell $ %v , XCH %v ; Asks %v - %v / Bids %v - %v ; trade %v XCH (g %v - %v XCH - %v USDT = p %v)`
 	msg := fmt.Sprintf(template,
 		totalBuyUSDT, totalBuyXCH, totalSellUSDT, totalSellXCH, a[0].Price, as.LastPrice, b[0].Price, bs.LastPrice, totalTradeXCH, gain, withdrawXCH, withdrawUSDT, profit)
 
+	traded := false
 	if profit.IsPositive() {
 		if conf.ExecuteTrades {
 			kOrderId, cOrder, gOrder, err := trade(totalBuyXCH, totalSellXCH, as.LastPrice, bs.LastPrice, conf)
 			if err != nil {
-				fmt.Println("trade err:", err)
+				return false, nil, fmt.Errorf("trade: %w", err)
 			} else {
 				fmt.Printf("k: %v\nc: %+v\ng: %+v\n", kOrderId, cOrder, gOrder)
+				traded = true
+			}
+
+			if conf.PEnable {
+				messages = append(messages, msg)
 			}
 		}
 
-		if conf.PEnable {
-			p := pushover.New(conf.PKey)
-			r := pushover.NewRecipient(conf.PUser)
-			resp, err := p.SendMessage(&pushover.Message{
-				Message: msg,
-			}, r)
-			if err != nil {
-				fmt.Println("push err:", err)
-			} else {
-				fmt.Println(resp.String())
-			}
-		}
 	}
 
 	fmt.Println("===")
@@ -236,11 +241,17 @@ func Book(conf *config.Config) {
 
 	as, bs, totalTradeXCH, gain, withdrawUSDT, withdrawXCH, profit, totalBuyUSDT, totalSellUSDT, totalBuyXCH, totalSellXCH = arbo(a, b, ignoreBalances, conf)
 
-	msg = fmt.Sprintf(template,
+	msg2 := fmt.Sprintf(template,
 		totalBuyUSDT, totalBuyXCH, totalSellUSDT, totalSellXCH, a[0].Price, as.LastPrice, b[0].Price, bs.LastPrice, totalTradeXCH, gain, withdrawXCH, withdrawUSDT, profit)
 
 	fmt.Println("when ignoring balances:")
-	fmt.Println(msg)
+	fmt.Println(msg2)
+
+	if len(messages) > 0 {
+		messages = append(messages, "when ignoring balances: "+msg2)
+	}
+
+	return traded, messages, nil
 }
 
 func arbo(a, b []model.Order, balances [model.ExchangeTypeMax]model.Balances, c *config.Config) (side, side, decimal.Decimal, decimal.Decimal, decimal.Decimal, decimal.Decimal, decimal.Decimal, [model.ExchangeTypeMax]decimal.Decimal, [model.ExchangeTypeMax]decimal.Decimal, [model.ExchangeTypeMax]decimal.Decimal, [model.ExchangeTypeMax]decimal.Decimal) {
