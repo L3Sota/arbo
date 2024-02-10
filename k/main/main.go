@@ -8,8 +8,9 @@ import (
 )
 
 func main() {
-	k.OrderTest(config.Load())
-	// k.QueryFee(config.Load())
+	k.LoadClient(config.Load())
+	k.OrderTest()
+	// k.QueryFee()
 	// book()
 	// balances()
 }
@@ -23,7 +24,7 @@ func book() {
 }
 
 func balances() {
-	b, err := k.Balances(config.Load())
+	b, err := k.Balances()
 
 	fmt.Println(b.USDT.String())
 	fmt.Println(b.XCH.String())

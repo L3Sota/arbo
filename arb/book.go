@@ -143,7 +143,7 @@ func GatherBalancesP(conf *config.Config) [model.ExchangeTypeMax]model.Balances 
 		return nil
 	})
 	eg.Go(func() error {
-		b, err := k.Balances(conf)
+		b, err := k.Balances()
 		if err != nil {
 			return fmt.Errorf("k balances: %w", err)
 		}

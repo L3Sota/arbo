@@ -22,6 +22,15 @@ var (
 	apiService *kucoin.ApiService
 )
 
+func LoadClient(c *config.Config) {
+	apiService = kucoin.NewApiService(
+		kucoin.ApiKeyOption(c.KKey),
+		kucoin.ApiKeyVersionOption(kucoin.ApiKeyVersionV2),
+		kucoin.ApiPassPhraseOption(c.KPass),
+		kucoin.ApiSecretOption(c.KSec),
+	)
+}
+
 func Book() ([]model.Order, []model.Order, error) {
 	s := kucoin.NewApiService()
 
@@ -59,13 +68,7 @@ func Book() ([]model.Order, []model.Order, error) {
 	return a, b, nil
 }
 
-func Balances(c *config.Config) (b model.Balances, err error) {
-	apiService = kucoin.NewApiService(
-		kucoin.ApiKeyOption(c.KKey),
-		kucoin.ApiKeyVersionOption(kucoin.ApiKeyVersionV2),
-		kucoin.ApiPassPhraseOption(c.KPass),
-		kucoin.ApiSecretOption(c.KSec),
-	)
+func Balances() (b model.Balances, err error) {
 
 	resp, err := apiService.Accounts("", "")
 	if err != nil {
@@ -144,13 +147,7 @@ func Sell(price, size decimal.Decimal) (string, error) {
 
 // {65a8928fcf1c7f00074b0ea7}
 // {Id:65a8928fcf1c7f00074b0ea7 Symbol:XCH-USDT OpType:DEAL Type:limit Side:buy Price:20 Size:0.1 Funds:0 DealFunds:0 DealSize:0 Fee:0 FeeCurrency:USDT Stp: Stop: StopTriggered:false StopPrice:0 TimeInForce:IOC PostOnly:false Hidden:false IceBerg:false VisibleSize:0 CancelAfter:0 Channel:API ClientOid:d6c51d3e-2f72-4e38-a9a6-2afc14041e2e Remark: Tags: IsActive:false CancelExist:true CreatedAt:1705546383349 TradeType:TRADE}
-func OrderTest(c *config.Config) {
-	apiService = kucoin.NewApiService(
-		kucoin.ApiKeyOption(c.KKey),
-		kucoin.ApiKeyVersionOption(kucoin.ApiKeyVersionV2),
-		kucoin.ApiPassPhraseOption(c.KPass),
-		kucoin.ApiSecretOption(c.KSec),
-	)
+func OrderTest() {
 
 	oid, err := Buy(decimal.NewFromInt(20), decimal.NewFromInt(1).Div(decimal.NewFromInt(10)))
 	fmt.Println(oid, err)
@@ -174,15 +171,9 @@ func OrderTest(c *config.Config) {
 }
 
 // [{XCH-USDT 0.001 0.001}]
-func QueryFee(c *config.Config) {
-	s := kucoin.NewApiService(
-		kucoin.ApiKeyOption(c.KKey),
-		kucoin.ApiKeyVersionOption(kucoin.ApiKeyVersionV2),
-		kucoin.ApiPassPhraseOption(c.KPass),
-		kucoin.ApiSecretOption(c.KSec),
-	)
+func QueryFee() {
 
-	resp, err := s.ActualFee("XCH-USDT")
+	resp, err := apiService.ActualFee("XCH-USDT")
 	if err != nil {
 		fmt.Println(err)
 		return
