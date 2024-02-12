@@ -20,13 +20,19 @@ func main() {
 	c.LoadClient(conf)
 	g.LoadClient()
 
+	gatherBalances := true
+	var err error
 	for {
-		fmt.Println("arb at " + time.Now().String())
-		arb.Book(conf)
+		fmt.Println("arb at", time.Now().String())
+		gatherBalances, err = arb.Book(gatherBalances, conf)
+		if err != nil {
+			fmt.Println("ending due to error:", err.Error())
+			return
+		}
 
 		select {
 		case t := <-deadline.C:
-			fmt.Println("deadline reached, ending at " + t.String())
+			fmt.Println("deadline reached, ending at", t.String())
 			return
 		case <-ticker.C:
 			continue
