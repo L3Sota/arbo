@@ -19,7 +19,7 @@ var (
 )
 
 func main() {
-	deadline := time.NewTimer(59 * time.Second)
+	deadline := time.NewTimer(59*time.Minute + 50*time.Second)
 	ticker := time.NewTicker(500 * time.Millisecond)
 
 	conf := config.Load()
