@@ -11,7 +11,6 @@ import (
 	"github.com/L3Sota/arbo/k"
 	"github.com/L3Sota/arbo/m"
 	"github.com/gateio/gateapi-go/v6"
-	"github.com/gregdel/pushover"
 	"github.com/shopspring/decimal"
 	"golang.org/x/sync/errgroup"
 )
@@ -176,11 +175,13 @@ func GatherBalancesP(conf *config.Config) (m [model.ExchangeTypeMax]model.Balanc
 	return m, nil
 }
 
-func Book(gatherBalances bool, conf *config.Config) (bool, error) {
+func Book(gatherBalances bool, conf *config.Config) (bool, []string, error) {
+	messages := make([]string, 0, 2)
+
 	if gatherBalances {
 		balances, err := GatherBalancesP(conf)
 		if err != nil {
-			return false, fmt.Errorf("balances: %w", err)
+			return false, nil, fmt.Errorf("balances: %w", err)
 		}
 		bb = balances
 	}
@@ -195,7 +196,7 @@ func Book(gatherBalances bool, conf *config.Config) (bool, error) {
 
 	a, b, err := GatherBooksP()
 	if err != nil {
-		return false, fmt.Errorf("books: %w", err)
+		return false, nil, fmt.Errorf("books: %w", err)
 	}
 
 	as, bs, totalTradeXCH, gain, withdrawUSDT, withdrawXCH, profit, totalBuyUSDT, totalSellUSDT, totalBuyXCH, totalSellXCH := arbo(a, b, bb, conf)
@@ -208,25 +209,17 @@ func Book(gatherBalances bool, conf *config.Config) (bool, error) {
 		if conf.ExecuteTrades {
 			kOrderId, cOrder, gOrder, err := trade(totalBuyXCH, totalSellXCH, as.LastPrice, bs.LastPrice, conf)
 			if err != nil {
-				return false, fmt.Errorf("trade: %w", err)
+				return false, nil, fmt.Errorf("trade: %w", err)
 			} else {
 				fmt.Printf("k: %v\nc: %+v\ng: %+v\n", kOrderId, cOrder, gOrder)
 				traded = true
 			}
-		}
 
-		if conf.PEnable {
-			p := pushover.New(conf.PKey)
-			r := pushover.NewRecipient(conf.PUser)
-			resp, err := p.SendMessage(&pushover.Message{
-				Message: msg,
-			}, r)
-			if err != nil {
-				fmt.Println("push err:", err)
-			} else {
-				fmt.Println(resp.String())
+			if conf.PEnable {
+				messages = append(messages, msg)
 			}
 		}
+
 	}
 
 	fmt.Println("===")
@@ -248,13 +241,17 @@ func Book(gatherBalances bool, conf *config.Config) (bool, error) {
 
 	as, bs, totalTradeXCH, gain, withdrawUSDT, withdrawXCH, profit, totalBuyUSDT, totalSellUSDT, totalBuyXCH, totalSellXCH = arbo(a, b, ignoreBalances, conf)
 
-	msg = fmt.Sprintf(template,
+	msg2 := fmt.Sprintf(template,
 		totalBuyUSDT, totalBuyXCH, totalSellUSDT, totalSellXCH, a[0].Price, as.LastPrice, b[0].Price, bs.LastPrice, totalTradeXCH, gain, withdrawXCH, withdrawUSDT, profit)
 
 	fmt.Println("when ignoring balances:")
-	fmt.Println(msg)
+	fmt.Println(msg2)
 
-	return traded, nil
+	if len(messages) > 0 {
+		messages = append(messages, "when ignoring balances: "+msg2)
+	}
+
+	return traded, messages, nil
 }
 
 func arbo(a, b []model.Order, balances [model.ExchangeTypeMax]model.Balances, c *config.Config) (side, side, decimal.Decimal, decimal.Decimal, decimal.Decimal, decimal.Decimal, decimal.Decimal, [model.ExchangeTypeMax]decimal.Decimal, [model.ExchangeTypeMax]decimal.Decimal, [model.ExchangeTypeMax]decimal.Decimal, [model.ExchangeTypeMax]decimal.Decimal) {
