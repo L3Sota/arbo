@@ -20,6 +20,7 @@ var (
 	BidReduction = decimal.NewFromInt(1).Sub(Fees.MakerTakerRatio)
 
 	apiService *kucoin.ApiService
+	public     *kucoin.ApiService
 )
 
 func LoadClient(c *config.Config) {
@@ -29,12 +30,12 @@ func LoadClient(c *config.Config) {
 		kucoin.ApiPassPhraseOption(c.KPass),
 		kucoin.ApiSecretOption(c.KSec),
 	)
+
+	public = kucoin.NewApiService()
 }
 
 func Book() ([]model.Order, []model.Order, error) {
-	s := kucoin.NewApiService()
-
-	resp, err := s.AggregatedPartOrderBook("XCH-USDT", 100)
+	resp, err := public.AggregatedPartOrderBook("XCH-USDT", 100)
 	if err != nil {
 		return nil, nil, err
 	}
