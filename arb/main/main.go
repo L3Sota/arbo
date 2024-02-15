@@ -9,6 +9,7 @@ import (
 	"github.com/L3Sota/arbo/arb/config"
 	"github.com/L3Sota/arbo/c"
 	"github.com/L3Sota/arbo/g"
+	"github.com/L3Sota/arbo/h"
 	"github.com/L3Sota/arbo/k"
 	"github.com/gregdel/pushover"
 )
@@ -18,12 +19,31 @@ var (
 	r *pushover.Recipient
 )
 
-func main() {
+func oneoff() {
+	conf := config.Load()
+	k.LoadClient(conf)
+	h.LoadClient(conf)
+	c.LoadClient(conf)
+	g.LoadClient()
+
+	if conf.PEnable {
+		p = pushover.New(conf.PKey)
+		r = pushover.NewRecipient(conf.PUser)
+	}
+
+	gatherBalances, msgs, err := arb.Book(true, conf)
+	fmt.Println(gatherBalances)
+	fmt.Println(msgs)
+	fmt.Println(err)
+}
+
+func repeat() {
 	deadline := time.NewTimer(59*time.Minute + 50*time.Second)
 	ticker := time.NewTicker(500 * time.Millisecond)
 
 	conf := config.Load()
 	k.LoadClient(conf)
+	h.LoadClient(conf)
 	c.LoadClient(conf)
 	g.LoadClient()
 
@@ -79,4 +99,8 @@ func main() {
 			continue
 		}
 	}
+}
+
+func main() {
+	repeat()
 }
