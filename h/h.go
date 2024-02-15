@@ -10,6 +10,7 @@ import (
 	"github.com/huobirdcenter/huobi_golang/config"
 	"github.com/huobirdcenter/huobi_golang/pkg/client"
 	"github.com/huobirdcenter/huobi_golang/pkg/model/market"
+	"github.com/huobirdcenter/huobi_golang/pkg/model/order"
 	"github.com/linstohu/nexapi/htx/spot/marketws"
 	"github.com/shopspring/decimal"
 )
@@ -25,11 +26,15 @@ var (
 
 	mc *client.MarketClient
 	ac *client.AccountClient
+	oc *client.OrderClient
+
+	accountID string
 )
 
 func LoadClient(conf *arboconfig.Config) {
 	mc = new(client.MarketClient).Init(config.Host)
 	ac = new(client.AccountClient).Init(conf.HKey, conf.HSec, config.Host)
+	oc = new(client.OrderClient).Init(conf.HKey, conf.HSec, config.Host)
 }
 
 func Book() ([]model.Order, []model.Order, error) {
@@ -67,14 +72,13 @@ func Balances() (b model.Balances, err error) {
 	if err != nil {
 		panic(err)
 	}
-	var id string
 	for _, a := range accs {
 		if a.Type == "spot" {
-			id = strconv.FormatInt(a.Id, 10)
+			accountID = strconv.FormatInt(a.Id, 10)
 		}
 	}
 
-	a, err := ac.GetAccountBalance(id)
+	a, err := ac.GetAccountBalance(accountID)
 	if err != nil {
 		panic(err)
 	}
@@ -91,6 +95,56 @@ func Balances() (b model.Balances, err error) {
 	}
 
 	return b, nil
+}
+
+func Buy(price, size decimal.Decimal) (string, error) {
+	resp, err := oc.PlaceOrder(&order.PlaceOrderRequest{
+		AccountId: accountID,
+		Symbol:    "xchusdt",
+		Type:      "buy-limit",
+		Amount:    size.String(),
+		Price:     price.String(),
+		Source:    "spot-api",
+	})
+	if err != nil {
+		return "", err
+	}
+	if resp.Status != "ok" {
+		return "", fmt.Errorf("response status %v, error code %v, msg %v", resp.Status, resp.ErrorCode, resp.ErrorMessage)
+	}
+	return resp.Data, nil
+}
+
+func Sell(price, size decimal.Decimal) (string, error) {
+	resp, err := oc.PlaceOrder(&order.PlaceOrderRequest{
+		AccountId: accountID,
+		Symbol:    "xchusdt",
+		Type:      "sell-limit",
+		Amount:    size.String(),
+		Price:     price.String(),
+		Source:    "spot-api",
+	})
+	if err != nil {
+		return "", err
+	}
+	if resp.Status != "ok" {
+		return "", fmt.Errorf("response status %v, error code %v, msg %v", resp.Status, resp.ErrorCode, resp.ErrorMessage)
+	}
+	return resp.Data, nil
+}
+
+func OrderTest() {
+	id, err := Buy(decimal.NewFromInt(20), decimal.RequireFromString("0.1"))
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	resp, err := oc.GetOrderById(id)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Printf("%+v\n%+v\n", resp, *(resp.Data))
 }
 
 func WSTest() {
