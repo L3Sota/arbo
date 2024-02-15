@@ -15,9 +15,13 @@ import (
 )
 
 var (
-	// TODO
-	AskAddition  = decimal.NewFromInt(1)
-	BidReduction = decimal.NewFromInt(1)
+	Fees = model.Fees{
+		MakerTakerRatio:    decimal.RequireFromString("0.0017"), // 0.17%
+		WithdrawalFlatXCH:  decimal.RequireFromString("0.0005"),
+		WithdrawalFlatUSDT: decimal.NewFromInt(1), // TRC20
+	}
+	AskAddition  = decimal.NewFromInt(1).Add(Fees.MakerTakerRatio)
+	BidReduction = decimal.NewFromInt(1).Sub(Fees.MakerTakerRatio)
 
 	mc *client.MarketClient
 	ac *client.AccountClient
