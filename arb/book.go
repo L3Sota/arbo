@@ -73,23 +73,23 @@ func GatherBooks() ([]model.Order, []model.Order) {
 	if err != nil {
 		return nil, nil
 	}
-	ga, gb, err := g.Book()
-	if err != nil {
-		return nil, nil
-	}
 	ca, cb, err := c.Book()
 	if err != nil {
 		return nil, nil
 	}
+	ga, gb, err := g.Book()
+	if err != nil {
+		return nil, nil
+	}
 
-	a := merge(true, ma, ka, ga, ca)
-	b := merge(false, mb, kb, gb, cb)
+	a := merge(true, ma, ka, ha, ca, ga)
+	b := merge(false, mb, kb, hb, cb, gb)
 
 	return a, b
 }
 
 func GatherBooksP() ([]model.Order, []model.Order, error) {
-	var ma, ka, ga, ca, mb, kb, gb, cb []model.Order
+	var ma, ka, ca, ga, mb, kb, cb, gb []model.Order
 	eg, _ := errgroup.WithContext(context.Background())
 	eg.Go(func() error {
 		a, b, err := m.Book()
@@ -110,15 +110,6 @@ func GatherBooksP() ([]model.Order, []model.Order, error) {
 		return nil
 	})
 	eg.Go(func() error {
-		a, b, err := g.Book()
-		if err != nil {
-			return fmt.Errorf("g book: %w", err)
-		}
-		ga = a
-		gb = b
-		return nil
-	})
-	eg.Go(func() error {
 		a, b, err := c.Book()
 		if err != nil {
 			return fmt.Errorf("c book: %w", err)
@@ -127,12 +118,21 @@ func GatherBooksP() ([]model.Order, []model.Order, error) {
 		cb = b
 		return nil
 	})
+	eg.Go(func() error {
+		a, b, err := g.Book()
+		if err != nil {
+			return fmt.Errorf("g book: %w", err)
+		}
+		ga = a
+		gb = b
+		return nil
+	})
 	if err := eg.Wait(); err != nil {
 		return nil, nil, err
 	}
 
-	a := merge(true, ma, ka, ga, ca)
-	b := merge(false, mb, kb, gb, cb)
+	a := merge(true, ma, ka, ca, ga)
+	b := merge(false, mb, kb, cb, gb)
 
 	return a, b, nil
 }
@@ -152,19 +152,19 @@ func GatherBalancesP(conf *config.Config) (m [model.ExchangeTypeMax]model.Balanc
 		return nil
 	})
 	eg.Go(func() error {
-		b, err := g.Balances(conf)
-		if err != nil {
-			return fmt.Errorf("g balances: %w", err)
-		}
-		m[model.ExchangeTypeGa] = b
-		return nil
-	})
-	eg.Go(func() error {
 		b, err := c.Balances()
 		if err != nil {
 			return fmt.Errorf("c balances: %w", err)
 		}
 		m[model.ExchangeTypeCo] = b
+		return nil
+	})
+	eg.Go(func() error {
+		b, err := g.Balances(conf)
+		if err != nil {
+			return fmt.Errorf("g balances: %w", err)
+		}
+		m[model.ExchangeTypeGa] = b
 		return nil
 	})
 
