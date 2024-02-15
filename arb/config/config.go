@@ -11,6 +11,9 @@ type Config struct {
 	KSec  string `split_words:"true"`
 	KPass string `split_words:"true"`
 
+	HKey string `split_words:"true"`
+	HSec string `split_words:"true"`
+
 	GKey string `split_words:"true"`
 	GSec string `split_words:"true"`
 

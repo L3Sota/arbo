@@ -3,7 +3,9 @@ package h
 import (
 	"fmt"
 	"log/slog"
+	"strconv"
 
+	arboconfig "github.com/L3Sota/arbo/arb/config"
 	"github.com/L3Sota/arbo/arb/model"
 	"github.com/huobirdcenter/huobi_golang/config"
 	"github.com/huobirdcenter/huobi_golang/pkg/client"
@@ -18,10 +20,12 @@ var (
 	BidReduction = decimal.NewFromInt(1)
 
 	mc *client.MarketClient
+	ac *client.AccountClient
 )
 
-func LoadClient() {
+func LoadClient(conf *arboconfig.Config) {
 	mc = new(client.MarketClient).Init(config.Host)
+	ac = new(client.AccountClient).Init(conf.HKey, conf.HSec, config.Host)
 }
 
 func Book() ([]model.Order, []model.Order, error) {
@@ -52,6 +56,37 @@ func Book() ([]model.Order, []model.Order, error) {
 	}
 
 	return a, b, nil
+}
+
+func Balances() (b model.Balances, err error) {
+	accs, err := ac.GetAccountInfo()
+	if err != nil {
+		panic(err)
+	}
+	var id string
+	for _, a := range accs {
+		if a.Type == "spot" {
+			id = strconv.FormatInt(a.Id, 10)
+		}
+	}
+
+	a, err := ac.GetAccountBalance(id)
+	if err != nil {
+		panic(err)
+	}
+
+	for _, aa := range a.List {
+		if aa.Type == "trade" {
+			switch aa.Currency {
+			case "usdt":
+				b.USDT = decimal.RequireFromString(aa.Balance)
+			case "xch":
+				b.XCH = decimal.RequireFromString(aa.Balance)
+			}
+		}
+	}
+
+	return b, nil
 }
 
 func WSTest() {
