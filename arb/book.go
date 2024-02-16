@@ -3,6 +3,7 @@ package arb
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/L3Sota/arbo/arb/config"
 	"github.com/L3Sota/arbo/arb/model"
@@ -245,24 +246,24 @@ func Book(gatherBalances bool, conf *config.Config) (bool, []string, error) {
 				messages = append(messages, msg)
 			}
 		}
-
 	}
 
-	fmt.Println("===")
-	for i, ask := range a {
-		if i > as.I+5 {
-			break
-		}
-		fmt.Println(ask.Ex, ask.EffectivePrice.StringFixed(2), ask.Price.StringFixed(2), ask.Amount.String())
+	depth := "ex eff pr amt\n===\n%v\n---\n%v\n===\n"
+	increase := 5
+	if profit.IsZero() {
+		increase = 0
 	}
-	fmt.Println("---")
-	for i, bid := range b {
-		if i > bs.I+5 {
-			break
-		}
-		fmt.Println(bid.Ex, bid.EffectivePrice.StringFixed(2), bid.Price.StringFixed(2), bid.Amount.String())
+	aDepth := make([]string, 0, as.I+increase)
+	for _, ask := range a[:as.I+increase] {
+		aDepth = append(aDepth, strings.Join([]string{ask.Ex.String(), ask.EffectivePrice.StringFixed(4), ask.Price.StringFixed(4), ask.Amount.String()}, " "))
 	}
-	fmt.Println("===")
+	bDepth := make([]string, 0, bs.I+increase)
+	for _, bid := range b {
+		bDepth = append(bDepth, strings.Join([]string{bid.Ex.String(), bid.EffectivePrice.StringFixed(4), bid.Price.StringFixed(4), bid.Amount.String()}, " "))
+	}
+
+	fmt.Printf(depth, strings.Join(aDepth, "\n"), strings.Join(bDepth, "\n"))
+
 	msg = fmt.Sprintf(template,
 		totalBuyUSDT, totalBuyXCH, totalSellUSDT, totalSellXCH, a[0].Price, as.LastPrice, b[0].Price, bs.LastPrice, totalTradeXCH, gain, withdrawXCH, withdrawUSDT, profit)
 	fmt.Println(msg)
@@ -272,8 +273,10 @@ func Book(gatherBalances bool, conf *config.Config) (bool, []string, error) {
 	msg2 := fmt.Sprintf(template,
 		totalBuyUSDT, totalBuyXCH, totalSellUSDT, totalSellXCH, a[0].Price, as.LastPrice, b[0].Price, bs.LastPrice, totalTradeXCH, gain, withdrawXCH, withdrawUSDT, profit)
 
-	fmt.Println("when ignoring balances:")
-	fmt.Println(msg2)
+	if msg2 != msg {
+		fmt.Println("when ignoring balances:")
+		fmt.Println(msg2)
+	}
 
 	if len(messages) > 0 {
 		messages = append(messages, "when ignoring balances: "+msg2)
