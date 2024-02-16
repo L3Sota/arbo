@@ -6,6 +6,7 @@ import (
 	"github.com/L3Sota/arbo/arb/config"
 	"github.com/L3Sota/arbo/arb/model"
 	"github.com/L3Sota/arbo/g"
+	"github.com/L3Sota/arbo/h"
 	"github.com/L3Sota/arbo/k"
 	"github.com/L3Sota/arbo/m"
 	"github.com/google/go-cmp/cmp"
@@ -277,9 +278,9 @@ func TestArbo(t *testing.T) {
 				},
 				TotalTradeXCH: decimal.NewFromInt(4),
 				Gain:          decimal.NewFromInt(5), // 2 + 2 + 1
-				WithdrawUSDT:  k.Fees.WithdrawalFlatUSDT,
+				WithdrawUSDT:  k.Fees.WithdrawalFlatUSDT.Add(h.Fees.WithdrawalFlatUSDT),
 				WithdrawXCH:   m.Fees.WithdrawalFlatXCH,
-				Profit:        decimal.NewFromInt(5).Sub(k.Fees.WithdrawalFlatUSDT).Sub(m.Fees.WithdrawalFlatXCH.Mul(decimal.NewFromInt(28))),
+				Profit:        decimal.NewFromInt(5).Sub(k.Fees.WithdrawalFlatUSDT).Sub(h.Fees.WithdrawalFlatUSDT).Sub(m.Fees.WithdrawalFlatXCH.Mul(decimal.NewFromInt(28))),
 				TotalBuyUSDT: [model.ExchangeTypeMax]decimal.Decimal{
 					decimal.NewFromInt(103), // 25 + 3*26
 					decimal.Zero,
@@ -366,9 +367,9 @@ func TestArbo(t *testing.T) {
 				},
 				TotalTradeXCH: decimal.NewFromInt(4),
 				Gain:          decimal.NewFromInt(5), // 2 + 2 + 1
-				WithdrawUSDT:  k.Fees.WithdrawalFlatUSDT,
+				WithdrawUSDT:  k.Fees.WithdrawalFlatUSDT.Add(h.Fees.WithdrawalFlatUSDT),
 				WithdrawXCH:   m.Fees.WithdrawalFlatXCH,
-				Profit:        decimal.NewFromInt(5).Sub(k.Fees.WithdrawalFlatUSDT).Sub(m.Fees.WithdrawalFlatXCH.Mul(decimal.NewFromInt(28))),
+				Profit:        decimal.NewFromInt(5).Sub(k.Fees.WithdrawalFlatUSDT).Sub(h.Fees.WithdrawalFlatUSDT).Sub(m.Fees.WithdrawalFlatXCH.Mul(decimal.NewFromInt(28))),
 				TotalBuyUSDT: [model.ExchangeTypeMax]decimal.Decimal{
 					decimal.NewFromInt(103), // 25 + 3*26
 					decimal.Zero,
