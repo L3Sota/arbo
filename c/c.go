@@ -121,7 +121,7 @@ func Balances() (b model.Balances, err error) {
 func Buy(price, size decimal.Decimal) (*OrderResp, error) {
 	//put limit order
 	limitOrderRespBody, err := PutLimitOrder(
-		size.String(),
+		size.Round(4).String(),
 		price.String(),
 		"buy",
 		"XCHUSDT")
@@ -138,7 +138,7 @@ func Buy(price, size decimal.Decimal) (*OrderResp, error) {
 func Sell(price, size decimal.Decimal) (*OrderResp, error) {
 	//put limit order
 	limitOrderRespBody, err := PutLimitOrder(
-		size.String(),
+		size.Round(4).String(),
 		price.String(),
 		"sell",
 		"XCHUSDT")

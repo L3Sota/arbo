@@ -129,7 +129,7 @@ func Buy(price, size decimal.Decimal) (string, error) {
 
 		// LIMIT ORDER PARAMETERS
 		Price:       price.String(),
-		Size:        size.String(),
+		Size:        size.Round(4).String(),
 		TimeInForce: "GTC",
 	})
 	if err != nil {
@@ -154,7 +154,7 @@ func Sell(price, size decimal.Decimal) (string, error) {
 
 		// LIMIT ORDER PARAMETERS
 		Price:       price.String(),
-		Size:        size.String(),
+		Size:        size.Round(4).String(),
 		TimeInForce: "GTC",
 	})
 	if err != nil {

@@ -110,7 +110,7 @@ func Buy(price, size decimal.Decimal) (string, error) {
 		AccountId: accountID,
 		Symbol:    "xchusdt",
 		Type:      "buy-limit",
-		Amount:    size.String(),
+		Amount:    size.Round(4).String(),
 		Price:     price.String(),
 		Source:    "spot-api",
 	})
@@ -128,7 +128,7 @@ func Sell(price, size decimal.Decimal) (string, error) {
 		AccountId: accountID,
 		Symbol:    "xchusdt",
 		Type:      "sell-limit",
-		Amount:    size.String(),
+		Amount:    size.Round(4).String(),
 		Price:     price.String(),
 		Source:    "spot-api",
 	})
