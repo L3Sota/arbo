@@ -70,7 +70,7 @@ func Book() ([]model.Order, []model.Order, error) {
 func Balances() (b model.Balances, err error) {
 	accs, err := ac.GetAccountInfo()
 	if err != nil {
-		panic(err)
+		return b, err
 	}
 	for _, a := range accs {
 		if a.Type == "spot" {
@@ -80,7 +80,7 @@ func Balances() (b model.Balances, err error) {
 
 	a, err := ac.GetAccountBalance(accountID)
 	if err != nil {
-		panic(err)
+		return b, err
 	}
 
 	for _, aa := range a.List {
