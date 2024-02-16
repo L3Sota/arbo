@@ -28,3 +28,6 @@ go.work
 /main
 /io.github.l3sota.arbo.sh
 /io.github.l3sota.arbo.plist
+/cron.stdout
+/cron.stderr
+/flock.lock
