@@ -258,11 +258,13 @@ func Book(gatherBalances bool, conf *config.Config) (bool, []string, error) {
 		aDepth = append(aDepth, strings.Join([]string{ask.Ex.String(), ask.EffectivePrice.StringFixed(4), ask.Price.StringFixed(4), ask.Amount.String()}, " "))
 	}
 	bDepth := make([]string, 0, bs.I+increase)
-	for _, bid := range b {
+	for _, bid := range b[:bs.I+increase] {
 		bDepth = append(bDepth, strings.Join([]string{bid.Ex.String(), bid.EffectivePrice.StringFixed(4), bid.Price.StringFixed(4), bid.Amount.String()}, " "))
 	}
 
-	fmt.Printf(depth, strings.Join(aDepth, "\n"), strings.Join(bDepth, "\n"))
+	if len(aDepth) > 0 {
+		fmt.Printf(depth, strings.Join(aDepth, "\n"), strings.Join(bDepth, "\n"))
+	}
 
 	msg = fmt.Sprintf(template,
 		totalBuyUSDT, totalBuyXCH, totalSellUSDT, totalSellXCH, a[0].Price, as.LastPrice, b[0].Price, bs.LastPrice, totalTradeXCH, gain, withdrawXCH, withdrawUSDT, profit)
