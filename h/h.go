@@ -87,9 +87,17 @@ func Balances() (b model.Balances, err error) {
 		if aa.Type == "trade" {
 			switch aa.Currency {
 			case "usdt":
-				b.USDT = decimal.RequireFromString(aa.Balance)
+				usdt, err := decimal.NewFromString(aa.Balance)
+				if err != nil {
+					return b, fmt.Errorf("failed to parse %v into decimal: %w", aa.Balance, err)
+				}
+				b.USDT = usdt
 			case "xch":
-				b.XCH = decimal.RequireFromString(aa.Balance)
+				xch, err := decimal.NewFromString(aa.Balance)
+				if err != nil {
+					return b, fmt.Errorf("failed to parse %v into decimal: %w", aa.Balance, err)
+				}
+				b.XCH = xch
 			}
 		}
 	}

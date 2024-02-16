@@ -47,20 +47,36 @@ func Book() ([]model.Order, []model.Order, error) {
 
 	a := make([]model.Order, 0, len(o.Asks))
 	for _, ask := range o.Asks {
+		p, err := decimal.NewFromString(ask[0])
+		if err != nil {
+			return nil, nil, fmt.Errorf("tried to parse %v, got err: %w\nraw resp: %v", ask[0], err, resp.String())
+		}
+		amt, err := decimal.NewFromString(ask[1])
+		if err != nil {
+			return nil, nil, fmt.Errorf("tried to parse %v, got err: %w\nraw resp: %v", ask[1], err, resp.String())
+		}
 		o := model.Order{
 			Ex:     model.ExchangeTypeCo,
-			Price:  decimal.RequireFromString(ask[0]),
-			Amount: decimal.RequireFromString(ask[1]),
+			Price:  p,
+			Amount: amt,
 		}
 		o.EffectivePrice = o.Price.Mul(AskAddition)
 		a = append(a, o)
 	}
 	b := make([]model.Order, 0, len(o.Bids))
 	for _, bid := range o.Bids {
+		p, err := decimal.NewFromString(bid[0])
+		if err != nil {
+			return nil, nil, fmt.Errorf("tried to parse %v, got err: %w\nraw resp: %v", bid[0], err, resp.String())
+		}
+		amt, err := decimal.NewFromString(bid[1])
+		if err != nil {
+			return nil, nil, fmt.Errorf("tried to parse %v, got err: %w\nraw resp: %v", bid[1], err, resp.String())
+		}
 		o := model.Order{
 			Ex:     model.ExchangeTypeCo,
-			Price:  decimal.RequireFromString(bid[0]),
-			Amount: decimal.RequireFromString(bid[1]),
+			Price:  p,
+			Amount: amt,
 		}
 		o.EffectivePrice = o.Price.Mul(BidReduction)
 		b = append(b, o)
@@ -85,9 +101,17 @@ func Balances() (b model.Balances, err error) {
 	for currency, aa := range a.AssetBalance {
 		switch currency {
 		case "USDT":
-			b.USDT = decimal.RequireFromString(aa.Available)
+			usdt, err := decimal.NewFromString(aa.Available)
+			if err != nil {
+				return b, fmt.Errorf("failed to parse %v into decimal: %w", aa.Available, err)
+			}
+			b.USDT = usdt
 		case "XCH":
-			b.XCH = decimal.RequireFromString(aa.Available)
+			xch, err := decimal.NewFromString(aa.Available)
+			if err != nil {
+				return b, fmt.Errorf("failed to parse %v into decimal: %w", aa.Available, err)
+			}
+			b.XCH = xch
 		}
 	}
 
