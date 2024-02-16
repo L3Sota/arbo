@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/L3Sota/arbo/arb/config"
+	"gopkg.in/resty.v1"
 )
 
 var (
@@ -26,6 +27,7 @@ func LoadClient(conf *config.Config) {
 	id = conf.CId
 	secret = conf.CSec
 	client = &http.Client{}
+	rest = resty.New()
 }
 
 // APIHTTPHOST api host

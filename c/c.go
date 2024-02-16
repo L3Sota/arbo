@@ -18,6 +18,8 @@ var (
 
 	AskAddition  = decimal.NewFromInt(1).Add(Fees.MakerTakerRatio)
 	BidReduction = decimal.NewFromInt(1).Sub(Fees.MakerTakerRatio)
+
+	rest *resty.Client
 )
 
 type book struct {
@@ -28,11 +30,9 @@ type book struct {
 }
 
 func Book() ([]model.Order, []model.Order, error) {
-	client := resty.New()
-
-	resp, err := client.R().Get("https://api.coinex.com/v1/market/depth?market=XCHUSDT&merge=0.01&limit=50")
+	resp, err := rest.R().Get("https://api.coinex.com/v1/market/depth?market=XCHUSDT&merge=0.01&limit=50")
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("rest err: %w; resp: %+v", err, resp)
 	}
 
 	raw := &struct {
@@ -40,7 +40,7 @@ func Book() ([]model.Order, []model.Order, error) {
 	}{}
 
 	if err := json.Unmarshal(resp.Body(), raw); err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("json err: %w; resp: %+v", err, resp)
 	}
 
 	o := raw.Data

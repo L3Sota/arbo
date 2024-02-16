@@ -37,7 +37,7 @@ func Book() ([]model.Order, []model.Order, error) {
 		} else {
 			fmt.Printf("generic error: %s\n", err.Error())
 		}
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("order book: %w", err)
 	}
 
 	a := make([]model.Order, 0, len(o.Asks))

@@ -40,7 +40,7 @@ func LoadClient(conf *arboconfig.Config) {
 func Book() ([]model.Order, []model.Order, error) {
 	o, err := mc.GetDepth("xchusdt", "step0", market.GetDepthOptionalRequest{})
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("depth: %w", err)
 	}
 
 	a := make([]model.Order, 0, len(o.Asks))

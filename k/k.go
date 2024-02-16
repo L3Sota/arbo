@@ -37,12 +37,12 @@ func LoadClient(c *config.Config) {
 func Book() ([]model.Order, []model.Order, error) {
 	resp, err := public.AggregatedPartOrderBook("XCH-USDT", 100)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("order book: %w", err)
 	}
 
 	var o kucoin.PartOrderBookModel
 	if err := resp.ReadData(&o); err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("read data: %w; resp: %+v", err, resp)
 	}
 
 	a := make([]model.Order, 0, len(o.Asks))
