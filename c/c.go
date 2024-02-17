@@ -40,6 +40,10 @@ func Book() ([]model.Order, []model.Order, error) {
 	}{}
 
 	if err := json.Unmarshal(resp.Body(), raw); err != nil {
+		if resp.StatusCode() == 504 {
+			// gateway timeout, ignore c for this run
+			return nil, nil, nil
+		}
 		return nil, nil, fmt.Errorf("json err: %w; resp: %+v", err, resp)
 	}
 
