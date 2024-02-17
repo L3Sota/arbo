@@ -61,6 +61,10 @@ func repeat() {
 		fmt.Println("arb at", time.Now().String())
 		gatherBalances, msgs, err = arb.Book(gatherBalances, conf)
 		if err != nil {
+			if strings.Contains(err.Error(), "IP address") || strings.Contains(err.Error(), "IP Address") || strings.Contains(err.Error(), "ip address") {
+				<-time.After(time.Minute)
+				continue
+			}
 			msg := fmt.Sprintf("[%v] arb ending due to error: %v", time.Now().String(), err.Error())
 			fmt.Println(msg)
 			if conf.PEnable {
