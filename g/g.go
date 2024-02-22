@@ -12,9 +12,9 @@ import (
 
 var (
 	Fees = model.Fees{
-		MakerTakerRatio:    decimal.RequireFromString("0.002"),  // 0.2%
-		WithdrawalFlatXCH:  decimal.RequireFromString("0.0145"), // variable?
-		WithdrawalFlatUSDT: decimal.RequireFromString("0.5"),    // SOL
+		MakerTakerRatio:    decimal.RequireFromString("0.00097"), // 0.097%
+		WithdrawalFlatXCH:  decimal.RequireFromString("0.0145"),  // variable?
+		WithdrawalFlatUSDT: decimal.RequireFromString("0.5"),     // SOL
 	}
 	AskAddition  = decimal.NewFromInt(1).Add(Fees.MakerTakerRatio)
 	BidReduction = decimal.NewFromInt(1).Sub(Fees.MakerTakerRatio)
@@ -189,5 +189,5 @@ func QueryFee(c *config.Config) {
 		return
 	}
 
-	fmt.Println(fee)
+	fmt.Printf("%+v\n", fee)
 }

@@ -10,8 +10,8 @@ import (
 func main() {
 	g.LoadClient()
 	// balances()
-	g.OrderTest(config.Load())
-	// g.QueryFee(config.Load())
+	// g.OrderTest(config.Load())
+	g.QueryFee(config.Load())
 	// book()
 }
 
