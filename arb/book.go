@@ -26,7 +26,12 @@ type side struct {
 	Move          bool
 }
 
-const template = `Buy $ %v , XCH %v / Sell $ %v , XCH %v ; Asks %v - %v / Bids %v - %v ; trade %v XCH (g %v - %v XCH - %v USDT = p %v)`
+const (
+	profitTemplate = "p %v"
+	buyTemplate    = "買@%v $%v, ¢%v [≦ $%v]"
+	sellTemplate   = "売@%v $%v, ¢%v [≧ $%v]"
+	miscTemplate   = "t ¢%v, (g %v - ¢%v - $%v)"
+)
 
 var (
 	fees = [model.ExchangeTypeMax]model.Fees{
@@ -243,8 +248,20 @@ func Book(gatherBalances bool, conf *config.Config) (bool, []string, error) {
 			}
 
 			if conf.PEnable {
-				msg = fmt.Sprintf(template,
-					totalBuyUSDT, totalBuyXCH, totalSellUSDT, totalSellXCH, a[0].Price, as.LastPrice, b[0].Price, bs.LastPrice, totalTradeXCH, gain, withdrawXCH, withdrawUSDT, profit)
+				trades := []string{fmt.Sprintf(profitTemplate, profit)}
+				for e, b := range totalBuyXCH {
+					if b.IsPositive() {
+						trades = append(trades, fmt.Sprintf(buyTemplate, model.ExchangeType(e).String(), totalBuyUSDT[e], b, as.LastPrice[e]))
+					}
+				}
+				for e, s := range totalSellXCH {
+					if s.IsPositive() {
+						trades = append(trades, fmt.Sprintf(sellTemplate, model.ExchangeType(e).String(), totalSellUSDT[e], s, bs.LastPrice[e]))
+					}
+				}
+				trades = append(trades, fmt.Sprintf(miscTemplate, totalTradeXCH, gain, withdrawXCH, withdrawUSDT))
+
+				msg = strings.Join(trades, "\n")
 				messages = append(messages, msg)
 			}
 		}
@@ -268,14 +285,36 @@ func Book(gatherBalances bool, conf *config.Config) (bool, []string, error) {
 		fmt.Printf(depth, strings.Join(aDepth, "\n"), strings.Join(bDepth, "\n"))
 	}
 
-	msg = fmt.Sprintf(template,
-		totalBuyUSDT, totalBuyXCH, totalSellUSDT, totalSellXCH, a[0].Price, as.LastPrice, b[0].Price, bs.LastPrice, totalTradeXCH, gain, withdrawXCH, withdrawUSDT, profit)
+	trades := []string{fmt.Sprintf(profitTemplate, profit)}
+	for e, b := range totalBuyXCH {
+		if b.IsPositive() {
+			trades = append(trades, fmt.Sprintf(buyTemplate, model.ExchangeType(e).String(), totalBuyUSDT[e], b, as.LastPrice[e]))
+		}
+	}
+	for e, s := range totalSellXCH {
+		if s.IsPositive() {
+			trades = append(trades, fmt.Sprintf(sellTemplate, model.ExchangeType(e).String(), totalSellUSDT[e], s, bs.LastPrice[e]))
+		}
+	}
+	trades = append(trades, fmt.Sprintf(miscTemplate, totalTradeXCH, gain, withdrawXCH, withdrawUSDT))
+	msg = strings.Join(trades, "\n")
 	fmt.Println(msg)
 
 	as, bs, totalTradeXCH, gain, withdrawUSDT, withdrawXCH, profit, totalBuyUSDT, totalSellUSDT, totalBuyXCH, totalSellXCH = arbo(a, b, ignoreBalances, conf)
 
-	msg2 := fmt.Sprintf(template,
-		totalBuyUSDT, totalBuyXCH, totalSellUSDT, totalSellXCH, a[0].Price, as.LastPrice, b[0].Price, bs.LastPrice, totalTradeXCH, gain, withdrawXCH, withdrawUSDT, profit)
+	trades = []string{fmt.Sprintf(profitTemplate, profit)}
+	for e, b := range totalBuyXCH {
+		if b.IsPositive() {
+			trades = append(trades, fmt.Sprintf(buyTemplate, model.ExchangeType(e).String(), totalBuyUSDT[e], b, as.LastPrice[e]))
+		}
+	}
+	for e, s := range totalSellXCH {
+		if s.IsPositive() {
+			trades = append(trades, fmt.Sprintf(sellTemplate, model.ExchangeType(e).String(), totalSellUSDT[e], s, bs.LastPrice[e]))
+		}
+	}
+	trades = append(trades, fmt.Sprintf(miscTemplate, totalTradeXCH, gain, withdrawXCH, withdrawUSDT))
+	msg2 := strings.Join(trades, "\n")
 
 	if msg2 != msg {
 		fmt.Println("when ignoring balances:")
