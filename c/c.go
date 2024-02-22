@@ -11,7 +11,7 @@ import (
 
 var (
 	Fees = model.Fees{
-		MakerTakerRatio:    decimal.RequireFromString("0.002"), // 0.2%
+		MakerTakerRatio:    decimal.RequireFromString("0.003"), // 0.3%
 		WithdrawalFlatXCH:  decimal.RequireFromString("0.001"),
 		WithdrawalFlatUSDT: decimal.RequireFromString("1.4"), // TRC20
 	}
