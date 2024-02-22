@@ -237,33 +237,38 @@ func Book(gatherBalances bool, conf *config.Config) (bool, []string, error) {
 
 	as, bs, totalTradeXCH, gain, withdrawUSDT, withdrawXCH, profit, totalBuyUSDT, totalSellUSDT, totalBuyXCH, totalSellXCH := arbo(a, b, bb, conf)
 
-	if profit.IsPositive() {
-		if conf.ExecuteTrades {
-			kOrderID, hOrderID, cOrder, gOrder, err := trade(totalBuyXCH, totalSellXCH, as.LastPrice, bs.LastPrice, conf)
-			if err != nil {
-				return false, nil, fmt.Errorf("trade: %w", err)
-			} else {
-				fmt.Printf("k: %v\nh: %v\nc: %+v\ng: %+v\n", kOrderID, hOrderID, cOrder, gOrder)
-				traded = true
+	if conf.ExecuteTrades && profit.IsPositive() {
+		kOrderID, hOrderID, cOrder, gOrder, err := trade(totalBuyUSDT, totalSellUSDT, totalBuyXCH, totalSellXCH, as.LastPrice, bs.LastPrice, conf)
+		if err != nil {
+			return false, nil, fmt.Errorf("trade: %w", err)
+		}
+
+		fmt.Printf("k: %v\nh: %v\nc: %+v\ng: %+v\n", kOrderID, hOrderID, cOrder, gOrder)
+		traded = true
+
+		if kOrderID == "" && hOrderID == "" && cOrder == nil && gOrder == nil {
+			traded = false
+		}
+
+		if conf.PEnable {
+			trades := []string{fmt.Sprintf(profitTemplate, profit)}
+			for e, b := range totalBuyXCH {
+				if b.IsPositive() {
+					trades = append(trades, fmt.Sprintf(buyTemplate, model.ExchangeType(e).String(), totalBuyUSDT[e], b, as.LastPrice[e]))
+				}
+			}
+			for e, s := range totalSellXCH {
+				if s.IsPositive() {
+					trades = append(trades, fmt.Sprintf(sellTemplate, model.ExchangeType(e).String(), totalSellUSDT[e], s, bs.LastPrice[e]))
+				}
+			}
+			trades = append(trades, fmt.Sprintf(miscTemplate, totalTradeXCH, gain, withdrawXCH, withdrawUSDT))
+			if !traded {
+				trades = append(trades, "(skipped: below min order threshold)")
 			}
 
-			if conf.PEnable {
-				trades := []string{fmt.Sprintf(profitTemplate, profit)}
-				for e, b := range totalBuyXCH {
-					if b.IsPositive() {
-						trades = append(trades, fmt.Sprintf(buyTemplate, model.ExchangeType(e).String(), totalBuyUSDT[e], b, as.LastPrice[e]))
-					}
-				}
-				for e, s := range totalSellXCH {
-					if s.IsPositive() {
-						trades = append(trades, fmt.Sprintf(sellTemplate, model.ExchangeType(e).String(), totalSellUSDT[e], s, bs.LastPrice[e]))
-					}
-				}
-				trades = append(trades, fmt.Sprintf(miscTemplate, totalTradeXCH, gain, withdrawXCH, withdrawUSDT))
-
-				msg = strings.Join(trades, "\n")
-				messages = append(messages, msg)
-			}
+			msg = strings.Join(trades, "\n")
+			messages = append(messages, msg)
 		}
 	}
 
@@ -431,13 +436,28 @@ func arbo(a, b []model.Order, balances [model.ExchangeTypeMax]model.Balances, c 
 	return *as, *bs, totalTradeXCH, gain, withdrawUSDT, withdrawXCH, profit, totalBuyUSDT, totalSellUSDT, totalBuyXCH, totalSellXCH
 }
 
-func trade(totalBuyXCH, totalSellXCH, askPrices, bidPrices [model.ExchangeTypeMax]decimal.Decimal, conf *config.Config) (string, string, *c.OrderResp, *gateapi.Order, error) {
+func trade(totalBuyUSDT, totalSellUSDT, totalBuyXCH, totalSellXCH, askPrices, bidPrices [model.ExchangeTypeMax]decimal.Decimal, conf *config.Config) (string, string, *c.OrderResp, *gateapi.Order, error) {
 	var (
 		kOrderID string
 		hOrderID string
 		cOrder   *c.OrderResp
 		gOrder   gateapi.Order
+
+		USDTMinSizes = [model.ExchangeTypeMax]string{"", "0.1", "10", "", ""}
+		XCHMinSizes  = [model.ExchangeTypeMax]string{"", "0.001", "", "0.05", ""}
 	)
+
+	for e, bXCH := range totalBuyXCH {
+		mXCH := XCHMinSizes[e]
+		if mXCH != "" && bXCH.LessThan(decimal.RequireFromString(mXCH)) {
+			return "", "", nil, nil, nil
+		}
+		bUSDT := totalBuyUSDT[e]
+		mUSDT := USDTMinSizes[e]
+		if mUSDT != "" && bUSDT.LessThan(decimal.RequireFromString(mUSDT)) {
+			return "", "", nil, nil, nil
+		}
+	}
 
 	eg, _ := errgroup.WithContext(context.Background())
 
