@@ -37,6 +37,8 @@ var (
 		g.Fees,
 	}
 
+	feeRatioCapUSDT = decimal.NewFromInt(3000)
+
 	big        = decimal.New(1, 10)
 	bigBalance = model.Balances{
 		XCH:  big,
@@ -364,15 +366,24 @@ func arbo(a, b []model.Order, balances [model.ExchangeTypeMax]model.Balances, c 
 	withdrawXCHAsUSDT := decimal.Zero
 	for e, b := range totalBuyUSDT {
 		if b.IsPositive() {
-			withdrawXCH = withdrawXCH.Add(fees[e].WithdrawalFlatXCH)
-			withdrawXCHAsUSDT = withdrawXCHAsUSDT.Add(fees[e].WithdrawalFlatXCH.Mul(bs.LastPrice[e]))
+			ratio := decimal.NewFromInt(1)
+			if b.LessThan(feeRatioCapUSDT) {
+				ratio = b.Div(feeRatioCapUSDT)
+			}
+			fee := fees[e].WithdrawalFlatXCH.Mul(ratio)
+			withdrawXCH = withdrawXCH.Add(fee)
+			withdrawXCHAsUSDT = withdrawXCHAsUSDT.Add(fee.Mul(bs.LastPrice[e]))
 		}
 	}
 	// sell XCH -> withdraw USDT
 	withdrawUSDT := decimal.Zero
 	for e, s := range totalSellUSDT {
 		if s.IsPositive() {
-			withdrawUSDT = withdrawUSDT.Add(fees[e].WithdrawalFlatUSDT)
+			ratio := decimal.NewFromInt(1)
+			if s.LessThan(feeRatioCapUSDT) {
+				ratio = s.Div(feeRatioCapUSDT)
+			}
+			withdrawUSDT = withdrawUSDT.Add(fees[e].WithdrawalFlatUSDT.Mul(ratio))
 		}
 	}
 
