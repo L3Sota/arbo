@@ -106,6 +106,10 @@ func repeat() {
 			} else {
 				fmt.Println("push ok:", resp.String())
 			}
+
+			if strings.Contains(msg, "skip") {
+				time.Sleep(time.Minute)
+			}
 		}
 
 		select {
