@@ -449,12 +449,24 @@ func trade(totalBuyUSDT, totalSellUSDT, totalBuyXCH, totalSellXCH, askPrices, bi
 
 	for e, bXCH := range totalBuyXCH {
 		mXCH := XCHMinSizes[e]
-		if mXCH != "" && bXCH.LessThan(decimal.RequireFromString(mXCH)) {
+		if mXCH != "" && bXCH.IsPositive() && bXCH.LessThan(decimal.RequireFromString(mXCH)) {
 			return "", "", nil, nil, nil
 		}
 		bUSDT := totalBuyUSDT[e]
 		mUSDT := USDTMinSizes[e]
-		if mUSDT != "" && bUSDT.LessThan(decimal.RequireFromString(mUSDT)) {
+		if mUSDT != "" && bUSDT.IsPositive() && bUSDT.LessThan(decimal.RequireFromString(mUSDT)) {
+			return "", "", nil, nil, nil
+		}
+	}
+
+	for e, sXCH := range totalSellXCH {
+		mXCH := XCHMinSizes[e]
+		if mXCH != "" && sXCH.IsPositive() && sXCH.LessThan(decimal.RequireFromString(mXCH)) {
+			return "", "", nil, nil, nil
+		}
+		sUSDT := totalSellUSDT[e]
+		mUSDT := USDTMinSizes[e]
+		if mUSDT != "" && sUSDT.IsPositive() && sUSDT.LessThan(decimal.RequireFromString(mUSDT)) {
 			return "", "", nil, nil, nil
 		}
 	}
