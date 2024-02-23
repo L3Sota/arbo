@@ -17,6 +17,13 @@ import (
 var (
 	p *pushover.Pushover
 	r *pushover.Recipient
+
+	nonfatalErrors = []string{
+		"IP address",
+		"IP Address",
+		"ip address",
+		"connection reset by peer",
+	}
 )
 
 func oneoff() {
@@ -61,8 +68,14 @@ func repeat() {
 		fmt.Println("arb at", time.Now().String())
 		gatherBalances, msgs, err = arb.Book(gatherBalances, conf)
 		if err != nil {
-			if strings.Contains(err.Error(), "IP address") || strings.Contains(err.Error(), "IP Address") || strings.Contains(err.Error(), "ip address") {
-				<-time.After(time.Minute)
+			nonfatal := false
+			for _, e := range nonfatalErrors {
+				if strings.Contains(err.Error(), e) {
+					nonfatal = true
+				}
+			}
+			if nonfatal {
+				time.Sleep(time.Minute)
 				continue
 			}
 			msg := fmt.Sprintf("[%v] arb ending due to error: %v", time.Now().String(), err.Error())
