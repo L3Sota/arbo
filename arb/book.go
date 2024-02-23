@@ -443,7 +443,7 @@ func trade(totalBuyUSDT, totalSellUSDT, totalBuyXCH, totalSellXCH, askPrices, bi
 		cOrder   *c.OrderResp
 		gOrder   gateapi.Order
 
-		USDTMinSizes = [model.ExchangeTypeMax]string{"", "0.1", "10", "", ""}
+		USDTMinSizes = [model.ExchangeTypeMax]string{"", "0.1", "10", "", "1"}
 		XCHMinSizes  = [model.ExchangeTypeMax]string{"", "0.001", "", "0.05", ""}
 	)
 
