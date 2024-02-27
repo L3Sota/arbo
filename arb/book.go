@@ -537,7 +537,7 @@ func trade(totalBuyUSDT, totalSellUSDT, totalBuyXCH, totalSellXCH, askPrices, bi
 		kOrderID string
 		hOrderID string
 		cOrder   *c.OrderResp
-		gOrder   gateapi.Order
+		gOrder   *gateapi.Order
 	)
 
 	for e, bXCH := range totalBuyXCH {
@@ -640,7 +640,7 @@ func trade(totalBuyUSDT, totalSellUSDT, totalBuyXCH, totalSellXCH, askPrices, bi
 			if err != nil {
 				return fmt.Errorf("g buy: %w", err)
 			}
-			gOrder = resp
+			gOrder = &resp
 			return nil
 		})
 	} else if totalSellXCH[model.ExchangeTypeGa].IsPositive() {
@@ -649,7 +649,7 @@ func trade(totalBuyUSDT, totalSellUSDT, totalBuyXCH, totalSellXCH, askPrices, bi
 			if err != nil {
 				return fmt.Errorf("g sell: %w", err)
 			}
-			gOrder = resp
+			gOrder = &resp
 			return nil
 		})
 	}
@@ -658,7 +658,7 @@ func trade(totalBuyUSDT, totalSellUSDT, totalBuyXCH, totalSellXCH, askPrices, bi
 		return "", "", nil, nil, err
 	}
 
-	return kOrderID, hOrderID, cOrder, &gOrder, nil
+	return kOrderID, hOrderID, cOrder, gOrder, nil
 }
 
 func merge(asc bool, xs ...[]model.Order) []model.Order {
