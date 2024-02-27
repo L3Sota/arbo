@@ -420,6 +420,87 @@ func arbo(a, b []model.Order, balances [model.ExchangeTypeMax]model.Balances, c 
 		}
 	}
 
+	// TODO walk back (handle > 1 count), also check for unprofitable exchanges (subtract withdrawal fees)
+	for e, bXCH := range totalBuyXCH {
+		mXCH := XCHMinSizes[e]
+		if !mXCH.IsZero() && bXCH.IsPositive() && bXCH.LessThan(mXCH) {
+			sellCount := 0
+			lastIndex := 0
+			for i, sXCH := range totalSellXCH {
+				if sXCH.IsPositive() {
+					sellCount++
+					lastIndex = i
+				}
+			}
+			if sellCount == 1 {
+				totalSellXCH[lastIndex] = totalSellXCH[lastIndex].Sub(bXCH)
+				totalSellUSDT[lastIndex] = totalSellUSDT[lastIndex].Sub(totalBuyUSDT[e]) // approximate
+				totalBuyXCH[e] = decimal.Zero
+				totalBuyUSDT[e] = decimal.Zero
+			}
+			continue
+		}
+		bUSDT := totalBuyUSDT[e]
+		mUSDT := USDTMinSizes[e]
+		if !mUSDT.IsZero() && bUSDT.IsPositive() && bUSDT.LessThan(mUSDT) {
+			sellCount := 0
+			lastIndex := 0
+			for i, sXCH := range totalSellXCH {
+				if sXCH.IsPositive() {
+					sellCount++
+					lastIndex = i
+				}
+			}
+			if sellCount == 1 {
+				totalSellXCH[lastIndex] = totalSellXCH[lastIndex].Sub(bXCH)
+				totalSellUSDT[lastIndex] = totalSellUSDT[lastIndex].Sub(totalBuyUSDT[e]) // approximate
+				totalBuyXCH[e] = decimal.Zero
+				totalBuyUSDT[e] = decimal.Zero
+			}
+			continue
+		}
+	}
+
+	for e, sXCH := range totalSellXCH {
+		mXCH := XCHMinSizes[e]
+		if !mXCH.IsZero() && sXCH.IsPositive() && sXCH.LessThan(mXCH) {
+			buyCount := 0
+			lastIndex := 0
+			for i, bXCH := range totalBuyXCH {
+				if bXCH.IsPositive() {
+					buyCount++
+					lastIndex = i
+				}
+			}
+			if buyCount == 1 {
+				totalBuyXCH[lastIndex] = totalBuyXCH[lastIndex].Sub(sXCH)
+				totalBuyUSDT[lastIndex] = totalBuyUSDT[lastIndex].Sub(totalBuyUSDT[e]) // approximate
+				totalSellXCH[e] = decimal.Zero
+				totalSellUSDT[e] = decimal.Zero
+			}
+			continue
+		}
+		sUSDT := totalSellUSDT[e]
+		mUSDT := USDTMinSizes[e]
+		if !mUSDT.IsZero() && sUSDT.IsPositive() && sUSDT.LessThan(mUSDT) {
+			buyCount := 0
+			lastIndex := 0
+			for i, bXCH := range totalBuyXCH {
+				if bXCH.IsPositive() {
+					buyCount++
+					lastIndex = i
+				}
+			}
+			if buyCount == 1 {
+				totalBuyXCH[lastIndex] = totalBuyXCH[lastIndex].Sub(sXCH)
+				totalBuyUSDT[lastIndex] = totalBuyUSDT[lastIndex].Sub(totalBuyUSDT[e]) // approximate
+				totalSellXCH[e] = decimal.Zero
+				totalSellUSDT[e] = decimal.Zero
+			}
+			continue
+		}
+	}
+
 	// buy XCH -> withdraw XCH
 	withdrawXCH := decimal.Zero
 	withdrawXCHAsUSDT := decimal.Zero
