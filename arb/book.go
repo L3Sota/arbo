@@ -269,12 +269,12 @@ func Book(gatherBalances bool, conf *config.Config) (bool, []string, error) {
 			trades := []string{fmt.Sprintf(profitTemplate, profit)}
 			for e, b := range totalBuyXCH {
 				if b.IsPositive() {
-					trades = append(trades, fmt.Sprintf(buyTemplate, model.ExchangeType(e).String(), totalBuyUSDT[e], b, as.LastPrice[e]))
+					trades = append(trades, fmt.Sprintf(buyTemplate, model.ExchangeType(e).String(), sigfigs(totalBuyUSDT[e]), sigfigs(b), sigfigs(as.LastPrice[e])))
 				}
 			}
 			for e, s := range totalSellXCH {
 				if s.IsPositive() {
-					trades = append(trades, fmt.Sprintf(sellTemplate, model.ExchangeType(e).String(), totalSellUSDT[e], s, bs.LastPrice[e]))
+					trades = append(trades, fmt.Sprintf(sellTemplate, model.ExchangeType(e).String(), sigfigs(totalSellUSDT[e]), sigfigs(s), sigfigs(bs.LastPrice[e])))
 				}
 			}
 			trades = append(trades, fmt.Sprintf(miscTemplate, totalTradeXCH, gain, withdrawXCH, withdrawUSDT))
@@ -690,4 +690,17 @@ func merge(asc bool, xs ...[]model.Order) []model.Order {
 		m = append(m, xs[which][where])
 		wheres[which]++
 	}
+}
+
+func sigfigs(d decimal.Decimal) string {
+	if d.Abs().GreaterThanOrEqual(decimal.NewFromInt(1)) {
+		t := d.Truncate(3)
+		if d.Equal(t) {
+			return d.String()
+		}
+		return t.String() + "..."
+	}
+
+	hack := decimal.NewFromInt(1000000000)
+	return d.Mul(hack).Truncate(3).Div(hack).String()
 }
