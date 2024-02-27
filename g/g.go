@@ -129,8 +129,8 @@ func Buy(price, size decimal.Decimal, c *config.Config) (gateapi.Order, error) {
 		Type:         "limit",
 		Account:      "spot",
 		Side:         "buy",
-		Amount:       size.Round(4).String(), // Amount in XCH (base currency)
-		Price:        price.String(),         // Price in USDT (quote currency)
+		Amount:       size.RoundDown(4).String(), // Amount in XCH (base currency)
+		Price:        price.String(),             // Price in USDT (quote currency)
 		TimeInForce:  "gtc",
 	})
 
@@ -152,8 +152,8 @@ func Sell(price, size decimal.Decimal, c *config.Config) (gateapi.Order, error) 
 		Type:         "limit",
 		Account:      "spot",
 		Side:         "sell",
-		Amount:       size.Round(4).String(), // Amount in XCH (base currency)
-		Price:        price.String(),         // Price in USDT (quote currency)
+		Amount:       size.RoundDown(4).String(), // Amount in XCH (base currency)
+		Price:        price.String(),             // Price in USDT (quote currency)
 		TimeInForce:  "gtc",
 	})
 
