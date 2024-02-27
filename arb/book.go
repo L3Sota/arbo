@@ -58,6 +58,21 @@ var (
 	}
 
 	bb [model.ExchangeTypeMax]model.Balances
+
+	USDTMinSizes = [model.ExchangeTypeMax]decimal.Decimal{
+		decimal.Zero,
+		decimal.RequireFromString("0.1"),
+		decimal.NewFromInt(10),
+		decimal.Zero,
+		decimal.NewFromInt(1),
+	}
+	XCHMinSizes = [model.ExchangeTypeMax]decimal.Decimal{
+		decimal.Zero,
+		decimal.RequireFromString("0.001"),
+		decimal.Zero,
+		decimal.RequireFromString("0.05"),
+		decimal.Zero,
+	}
 )
 
 // gather price information from all exchanges
@@ -442,31 +457,28 @@ func trade(totalBuyUSDT, totalSellUSDT, totalBuyXCH, totalSellXCH, askPrices, bi
 		hOrderID string
 		cOrder   *c.OrderResp
 		gOrder   gateapi.Order
-
-		USDTMinSizes = [model.ExchangeTypeMax]string{"", "0.1", "10", "", "1"}
-		XCHMinSizes  = [model.ExchangeTypeMax]string{"", "0.001", "", "0.05", ""}
 	)
 
 	for e, bXCH := range totalBuyXCH {
 		mXCH := XCHMinSizes[e]
-		if mXCH != "" && bXCH.IsPositive() && bXCH.LessThan(decimal.RequireFromString(mXCH)) {
+		if !mXCH.IsZero() && bXCH.IsPositive() && bXCH.LessThan(mXCH) {
 			return "", "", nil, nil, nil
 		}
 		bUSDT := totalBuyUSDT[e]
 		mUSDT := USDTMinSizes[e]
-		if mUSDT != "" && bUSDT.IsPositive() && bUSDT.LessThan(decimal.RequireFromString(mUSDT)) {
+		if !mUSDT.IsZero() && bUSDT.IsPositive() && bUSDT.LessThan(mUSDT) {
 			return "", "", nil, nil, nil
 		}
 	}
 
 	for e, sXCH := range totalSellXCH {
 		mXCH := XCHMinSizes[e]
-		if mXCH != "" && sXCH.IsPositive() && sXCH.LessThan(decimal.RequireFromString(mXCH)) {
+		if !mXCH.IsZero() && sXCH.IsPositive() && sXCH.LessThan(mXCH) {
 			return "", "", nil, nil, nil
 		}
 		sUSDT := totalSellUSDT[e]
 		mUSDT := USDTMinSizes[e]
-		if mUSDT != "" && sUSDT.IsPositive() && sUSDT.LessThan(decimal.RequireFromString(mUSDT)) {
+		if !mUSDT.IsZero() && sUSDT.IsPositive() && sUSDT.LessThan(mUSDT) {
 			return "", "", nil, nil, nil
 		}
 	}
