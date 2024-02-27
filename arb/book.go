@@ -339,10 +339,10 @@ func Book(gatherBalances bool, conf *config.Config) (bool, []string, error) {
 	if msg2 != msg {
 		fmt.Println("when ignoring balances:")
 		fmt.Println(msg2)
-	}
 
-	if len(messages) > 0 {
-		messages = append(messages, "when ignoring balances: "+msg2)
+		if len(messages) > 0 {
+			messages = append(messages, "when ignoring balances: "+msg2)
+		}
 	}
 
 	return traded, messages, nil
