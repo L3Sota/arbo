@@ -706,6 +706,17 @@ func sigfigs(d decimal.Decimal) string {
 		return t.String() + "..."
 	}
 
-	hack := decimal.NewFromInt(1000000000)
-	return d.Mul(hack).Truncate(3).Div(hack).String()
+	s := d.String()
+	first := -1
+	for i, c := range s {
+		if c == '0' || c == '-' || c == '.' {
+			continue
+		}
+		first = i
+		break
+	}
+	if first == -1 || first+3 >= len(s) {
+		return s
+	}
+	return s[:first+3] + "..."
 }
