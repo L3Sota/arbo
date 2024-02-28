@@ -42,7 +42,8 @@ var (
 		g.Fees,
 	}
 
-	feeRatioCapUSDT = decimal.NewFromInt(3000)
+	feeRatioCapUSDT   = decimal.NewFromInt(3000)
+	minimumProfitRate = decimal.RequireFromString("0.005") // $ profit / XCH traded
 
 	big        = decimal.New(1, 10)
 	bigBalance = model.Balances{
@@ -253,21 +254,27 @@ func Book(gatherBalances bool, conf *config.Config) (bool, []string, error) {
 	as, bs, totalTradeXCH, gain, withdrawUSDT, withdrawXCH, profit, totalBuyUSDT, totalSellUSDT, totalBuyXCH, totalSellXCH := arbo(a, b, bb, conf)
 
 	if conf.ExecuteTrades && profit.IsPositive() {
-		kOrderID, hOrderID, cOrder, gOrder, err := trade(totalBuyUSDT, totalSellUSDT, totalBuyXCH, totalSellXCH, as.LastPrice, bs.LastPrice, conf)
-		if err != nil {
-			return false, nil, fmt.Errorf("trade: %w", err)
-		}
+		profitRate := profit.Div(totalTradeXCH)
+		if profitRate.GreaterThanOrEqual(minimumProfitRate) {
+			kOrderID, hOrderID, cOrder, gOrder, err := trade(totalBuyUSDT, totalSellUSDT, totalBuyXCH, totalSellXCH, as.LastPrice, bs.LastPrice, conf)
+			if err != nil {
+				return false, nil, fmt.Errorf("trade: %w", err)
+			}
 
-		fmt.Printf("k: %v\nh: %v\nc: %+v\ng: %+v\n", kOrderID, hOrderID, cOrder, gOrder)
-		traded = true
+			fmt.Printf("k: %v\nh: %v\nc: %+v\ng: %+v\n", kOrderID, hOrderID, cOrder, gOrder)
+			traded = true
 
-		if kOrderID == "" && hOrderID == "" && cOrder == nil && gOrder == nil {
-			traded = false
+			if kOrderID == "" && hOrderID == "" && cOrder == nil && gOrder == nil {
+				traded = false
+			}
 		}
 
 		if conf.PEnable {
 			trades := []string{}
-			if !traded {
+			switch {
+			case profitRate.LessThan(minimumProfitRate):
+				trades = append(trades, fmt.Sprintf("(skipped: profit rate too low: %v)", sigfigs(profitRate)))
+			case !traded:
 				trades = append(trades, "(skipped: below min order threshold)")
 			}
 			trades = append(trades, fmt.Sprintf(profitTemplate, sigfigs(profit)))
