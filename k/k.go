@@ -169,6 +169,20 @@ func Sell(price, size decimal.Decimal) (string, error) {
 	return o.OrderId, nil
 }
 
+func GetOrder(id string) (*kucoin.OrderModel, error) {
+	resp, err := apiService.Order(id)
+	if err != nil {
+		return nil, err
+	}
+
+	var o kucoin.OrderModel
+	if err := resp.ReadData(&o); err != nil {
+		return nil, err
+	}
+
+	return &o, nil
+}
+
 // {65a8928fcf1c7f00074b0ea7}
 // {Id:65a8928fcf1c7f00074b0ea7 Symbol:XCH-USDT OpType:DEAL Type:limit Side:buy Price:20 Size:0.1 Funds:0 DealFunds:0 DealSize:0 Fee:0 FeeCurrency:USDT Stp: Stop: StopTriggered:false StopPrice:0 TimeInForce:IOC PostOnly:false Hidden:false IceBerg:false VisibleSize:0 CancelAfter:0 Channel:API ClientOid:d6c51d3e-2f72-4e38-a9a6-2afc14041e2e Remark: Tags: IsActive:false CancelExist:true CreatedAt:1705546383349 TradeType:TRADE}
 func OrderTest() {
