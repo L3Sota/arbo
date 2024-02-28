@@ -434,6 +434,7 @@ func arbo(a, b []model.Order, balances [model.ExchangeTypeMax]model.Balances, c 
 				}
 			}
 			if sellCount == 1 {
+				totalTradeXCH = totalTradeXCH.Sub(bXCH)
 				totalSellXCH[lastIndex] = totalSellXCH[lastIndex].Sub(bXCH)
 				totalSellUSDT[lastIndex] = totalSellUSDT[lastIndex].Sub(totalBuyUSDT[e]) // approximate
 				totalBuyXCH[e] = decimal.Zero
@@ -453,6 +454,7 @@ func arbo(a, b []model.Order, balances [model.ExchangeTypeMax]model.Balances, c 
 				}
 			}
 			if sellCount == 1 {
+				totalTradeXCH = totalTradeXCH.Sub(bXCH)
 				totalSellXCH[lastIndex] = totalSellXCH[lastIndex].Sub(bXCH)
 				totalSellUSDT[lastIndex] = totalSellUSDT[lastIndex].Sub(totalBuyUSDT[e]) // approximate
 				totalBuyXCH[e] = decimal.Zero
@@ -474,6 +476,7 @@ func arbo(a, b []model.Order, balances [model.ExchangeTypeMax]model.Balances, c 
 				}
 			}
 			if buyCount == 1 {
+				totalTradeXCH = totalTradeXCH.Sub(sXCH)
 				totalBuyXCH[lastIndex] = totalBuyXCH[lastIndex].Sub(sXCH)
 				totalBuyUSDT[lastIndex] = totalBuyUSDT[lastIndex].Sub(totalBuyUSDT[e]) // approximate
 				totalSellXCH[e] = decimal.Zero
@@ -493,6 +496,7 @@ func arbo(a, b []model.Order, balances [model.ExchangeTypeMax]model.Balances, c 
 				}
 			}
 			if buyCount == 1 {
+				totalTradeXCH = totalTradeXCH.Sub(sXCH)
 				totalBuyXCH[lastIndex] = totalBuyXCH[lastIndex].Sub(sXCH)
 				totalBuyUSDT[lastIndex] = totalBuyUSDT[lastIndex].Sub(totalBuyUSDT[e]) // approximate
 				totalSellXCH[e] = decimal.Zero
