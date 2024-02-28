@@ -266,7 +266,11 @@ func Book(gatherBalances bool, conf *config.Config) (bool, []string, error) {
 		}
 
 		if conf.PEnable {
-			trades := []string{fmt.Sprintf(profitTemplate, sigfigs(profit))}
+			trades := []string{}
+			if !traded {
+				trades = append(trades, "(skipped: below min order threshold)")
+			}
+			trades = append(trades, fmt.Sprintf(profitTemplate, sigfigs(profit)))
 			for e, b := range totalBuyXCH {
 				if b.IsPositive() {
 					trades = append(trades, fmt.Sprintf(buyTemplate, model.ExchangeType(e).String(), sigfigs(totalBuyUSDT[e]), sigfigs(b), sigfigs(as.LastPrice[e])))
@@ -278,9 +282,6 @@ func Book(gatherBalances bool, conf *config.Config) (bool, []string, error) {
 				}
 			}
 			trades = append(trades, fmt.Sprintf(miscTemplate, sigfigs(totalTradeXCH), sigfigs(gain), sigfigs(withdrawXCH), sigfigs(withdrawUSDT)))
-			if !traded {
-				trades = append(trades, "(skipped: below min order threshold)")
-			}
 
 			msg = strings.Join(trades, "\n")
 			messages = append(messages, msg)
