@@ -141,6 +141,14 @@ func Sell(price, size decimal.Decimal) (string, error) {
 	return resp.Data, nil
 }
 
+func GetOrder(id string) (*order.GetOrderResponse, error) {
+	resp, err := oc.GetOrderById(id)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
 func OrderTest() {
 	id, err := Buy(decimal.NewFromInt(20), decimal.RequireFromString("0.1"))
 	if err != nil {
