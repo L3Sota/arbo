@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Kucoin/kucoin-go-sdk"
 	"github.com/L3Sota/arbo/arb/config"
 	"github.com/L3Sota/arbo/arb/model"
 	"github.com/L3Sota/arbo/c"
@@ -13,6 +14,7 @@ import (
 	"github.com/L3Sota/arbo/k"
 	"github.com/L3Sota/arbo/m"
 	"github.com/gateio/gateapi-go/v6"
+	"github.com/huobirdcenter/huobi_golang/pkg/model/order"
 	"github.com/shopspring/decimal"
 	"golang.org/x/sync/errgroup"
 )
@@ -254,19 +256,43 @@ func Book(gatherBalances bool, conf *config.Config) (bool, []string, error) {
 	as, bs, totalTradeXCH, gain, withdrawUSDT, withdrawXCH, profit, totalBuyUSDT, totalSellUSDT, totalBuyXCH, totalSellXCH := arbo(a, b, bb, conf)
 
 	if conf.ExecuteTrades && profit.IsPositive() {
+		var (
+			kOrder *kucoin.OrderModel
+			hOrder *order.GetOrderResponse
+			cOrder *c.OrderResp
+			gOrder *gateapi.Order
+		)
+
 		profitRate := profit.Div(totalTradeXCH)
 		if profitRate.GreaterThanOrEqual(minimumProfitRate) {
-			kOrderID, hOrderID, cOrder, gOrder, err := trade(totalBuyUSDT, totalSellUSDT, totalBuyXCH, totalSellXCH, as.LastPrice, bs.LastPrice, conf)
+			kID, hID, cOrd, gOrd, err := trade(totalBuyUSDT, totalSellUSDT, totalBuyXCH, totalSellXCH, as.LastPrice, bs.LastPrice, conf)
 			if err != nil {
 				return false, nil, fmt.Errorf("trade: %w", err)
 			}
 
-			fmt.Printf("k: %v\nh: %v\nc: %+v\ng: %+v\n", kOrderID, hOrderID, cOrder, gOrder)
+			fmt.Printf("k: %v\nh: %v\nc: %+v\ng: %+v\n", kID, hID, cOrd, gOrd)
 			traded = true
 
-			if kOrderID == "" && hOrderID == "" && cOrder == nil && gOrder == nil {
+			if kID == "" && hID == "" && cOrd == nil && gOrd == nil {
 				traded = false
 			}
+
+			if kID != "" {
+				kOrd, err := k.GetOrder(kID)
+				if err != nil {
+					fmt.Printf("k GetOrder(%v) error: %v", kID, err)
+				}
+				kOrder = kOrd
+			}
+			if hID != "" {
+				hOrd, err := h.GetOrder(hID)
+				if err != nil {
+					fmt.Printf("h GetOrder(%v) error: %v", hID, err)
+				}
+				hOrder = hOrd
+			}
+			cOrder = cOrd
+			gOrder = gOrd
 		}
 
 		if conf.PEnable {
@@ -281,11 +307,67 @@ func Book(gatherBalances bool, conf *config.Config) (bool, []string, error) {
 			for e, b := range totalBuyXCH {
 				if b.IsPositive() {
 					trades = append(trades, fmt.Sprintf(buyTemplate, model.ExchangeType(e).String(), sigfigs(totalBuyUSDT[e]), sigfigs(b), sigfigs(as.LastPrice[e])))
+					switch e {
+					// case int(model.ExchangeTypeMe):
+					case int(model.ExchangeTypeKu):
+						if kOrder != nil {
+							trades = append(trades, fmt.Sprintf("(%v) fill: $%v, ¢%v; fee: $%v; full?: %t", model.ExchangeTypeKu.String(), kOrder.DealFunds, kOrder.DealSize, kOrder.Fee, !kOrder.IsActive))
+						} else {
+							trades = append(trades, fmt.Sprintf("(%v) nil", model.ExchangeTypeKu.String()))
+						}
+					case int(model.ExchangeTypeHu):
+						if hOrder != nil {
+							trades = append(trades, fmt.Sprintf("(%v) fill: $%v, ¢%v; fee: $%v; state: %v", model.ExchangeTypeHu.String(), hOrder.Data.FilledCashAmount, hOrder.Data.FilledAmount, hOrder.Data.FilledFees, hOrder.Data.State))
+						} else {
+							trades = append(trades, fmt.Sprintf("(%v) nil", model.ExchangeTypeHu.String()))
+						}
+					case int(model.ExchangeTypeCo):
+						if cOrder != nil {
+							trades = append(trades, fmt.Sprintf("(%v) fill: $%v, ¢%v; fee: $%v; status: %v", model.ExchangeTypeCo.String(), cOrder.Order.DealMoney, cOrder.Order.DealAmount, cOrder.Order.DealFee, cOrder.Order.Status))
+						} else {
+							trades = append(trades, fmt.Sprintf("(%v) nil", model.ExchangeTypeCo.String()))
+
+						}
+					case int(model.ExchangeTypeGa):
+						if gOrder != nil {
+							trades = append(trades, fmt.Sprintf("(%v) fill: $%v; fee: $%v; status: %v", model.ExchangeTypeGa.String(), gOrder.FilledTotal, gOrder.Fee, gOrder.Status))
+						} else {
+							trades = append(trades, fmt.Sprintf("(%v) nil", model.ExchangeTypeGa.String()))
+						}
+					}
 				}
 			}
 			for e, s := range totalSellXCH {
 				if s.IsPositive() {
 					trades = append(trades, fmt.Sprintf(sellTemplate, model.ExchangeType(e).String(), sigfigs(totalSellUSDT[e]), sigfigs(s), sigfigs(bs.LastPrice[e])))
+					switch e {
+					// case int(model.ExchangeTypeMe):
+					case int(model.ExchangeTypeKu):
+						if kOrder != nil {
+							trades = append(trades, fmt.Sprintf("(%v) fill: $%v, ¢%v; fee: $%v; full?: %t", model.ExchangeTypeKu.String(), kOrder.DealFunds, kOrder.DealSize, kOrder.Fee, !kOrder.IsActive))
+						} else {
+							trades = append(trades, fmt.Sprintf("(%v) nil", model.ExchangeTypeKu.String()))
+						}
+					case int(model.ExchangeTypeHu):
+						if hOrder != nil {
+							trades = append(trades, fmt.Sprintf("(%v) fill: $%v, ¢%v; fee: $%v; state: %v", model.ExchangeTypeHu.String(), hOrder.Data.FilledCashAmount, hOrder.Data.FilledAmount, hOrder.Data.FilledFees, hOrder.Data.State))
+						} else {
+							trades = append(trades, fmt.Sprintf("(%v) nil", model.ExchangeTypeHu.String()))
+						}
+					case int(model.ExchangeTypeCo):
+						if cOrder != nil {
+							trades = append(trades, fmt.Sprintf("(%v) fill: $%v, ¢%v; fee: $%v; status: %v", model.ExchangeTypeCo.String(), cOrder.Order.DealMoney, cOrder.Order.DealAmount, cOrder.Order.DealFee, cOrder.Order.Status))
+						} else {
+							trades = append(trades, fmt.Sprintf("(%v) nil", model.ExchangeTypeCo.String()))
+
+						}
+					case int(model.ExchangeTypeGa):
+						if gOrder != nil {
+							trades = append(trades, fmt.Sprintf("(%v) fill: $%v; fee: $%v; status: %v", model.ExchangeTypeGa.String(), gOrder.FilledTotal, gOrder.Fee, gOrder.Status))
+						} else {
+							trades = append(trades, fmt.Sprintf("(%v) nil", model.ExchangeTypeGa.String()))
+						}
+					}
 				}
 			}
 			trades = append(trades, fmt.Sprintf(miscTemplate, sigfigs(totalTradeXCH), sigfigs(gain), sigfigs(withdrawXCH), sigfigs(withdrawUSDT)))
