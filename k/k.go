@@ -126,6 +126,7 @@ func Buy(price, size decimal.Decimal) (string, error) {
 		Side:      "buy",
 		Symbol:    "XCH-USDT",
 		Type:      "limit",
+		STP:       "DC",
 
 		// LIMIT ORDER PARAMETERS
 		Price:       price.String(),
@@ -151,6 +152,7 @@ func Sell(price, size decimal.Decimal) (string, error) {
 		Side:      "sell",
 		Symbol:    "XCH-USDT",
 		Type:      "limit",
+		STP:       "DC",
 
 		// LIMIT ORDER PARAMETERS
 		Price:       price.String(),
