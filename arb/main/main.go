@@ -45,8 +45,9 @@ func oneoff() {
 }
 
 func repeat() {
+	tick := 500 * time.Millisecond
 	deadline := time.NewTimer(59*time.Minute + 50*time.Second)
-	ticker := time.NewTicker(500 * time.Millisecond)
+	ticker := time.NewTicker(tick)
 
 	conf := config.Load()
 	k.LoadClient(conf)
@@ -63,6 +64,8 @@ func repeat() {
 		gatherBalances = true
 		msgs           []string
 		err            error
+
+		waitMultiplier time.Duration = 1
 	)
 	for {
 		fmt.Println("arb at", time.Now().String())
@@ -75,8 +78,15 @@ func repeat() {
 				}
 			}
 			if nonfatal {
-				time.Sleep(time.Minute)
-				continue
+				select {
+				case t := <-deadline.C:
+					fmt.Println("deadline reached, ending at", t.String())
+					return
+				case <-time.After(waitMultiplier * time.Minute):
+					waitMultiplier++
+					ticker.Reset(tick)
+					continue
+				}
 			}
 			msg := fmt.Sprintf("[%v] arb ending due to error: %v", time.Now().String(), err.Error())
 			fmt.Println(msg)
@@ -108,7 +118,15 @@ func repeat() {
 			}
 
 			if strings.Contains(msg, "skip") {
-				time.Sleep(time.Minute)
+				select {
+				case t := <-deadline.C:
+					fmt.Println("deadline reached, ending at", t.String())
+					return
+				case <-time.After(waitMultiplier * time.Minute):
+					waitMultiplier++
+					ticker.Reset(tick)
+					continue
+				}
 			}
 		}
 
@@ -117,6 +135,7 @@ func repeat() {
 			fmt.Println("deadline reached, ending at", t.String())
 			return
 		case <-ticker.C:
+			waitMultiplier = 1
 			continue
 		}
 	}
