@@ -660,6 +660,25 @@ func trade(totalBuyUSDT, totalSellUSDT, totalBuyXCH, totalSellXCH, askPrices, bi
 
 	eg, _ := errgroup.WithContext(context.Background())
 
+	if totalBuyXCH[model.ExchangeTypeHu].IsPositive() {
+		eg.Go(func() error {
+			oid, err := h.Buy(askPrices[model.ExchangeTypeHu], totalBuyXCH[model.ExchangeTypeHu])
+			if err != nil {
+				return fmt.Errorf("h buy: %w", err)
+			}
+			hOrderID = oid
+			return nil
+		})
+	} else if totalSellXCH[model.ExchangeTypeHu].IsPositive() {
+		eg.Go(func() error {
+			oid, err := h.Sell(bidPrices[model.ExchangeTypeHu], totalSellXCH[model.ExchangeTypeHu])
+			if err != nil {
+				return fmt.Errorf("h sell: %w", err)
+			}
+			hOrderID = oid
+			return nil
+		})
+	}
 	// if totalBuyXCH[model.ExchangeTypeMe].IsPositive() {
 	// 	eg.Go(func() error {
 	// 		// buy
@@ -687,25 +706,6 @@ func trade(totalBuyUSDT, totalSellUSDT, totalBuyXCH, totalSellXCH, askPrices, bi
 				return fmt.Errorf("k sell: %w", err)
 			}
 			kOrderID = oid
-			return nil
-		})
-	}
-	if totalBuyXCH[model.ExchangeTypeHu].IsPositive() {
-		eg.Go(func() error {
-			oid, err := h.Buy(askPrices[model.ExchangeTypeHu], totalBuyXCH[model.ExchangeTypeHu])
-			if err != nil {
-				return fmt.Errorf("h buy: %w", err)
-			}
-			hOrderID = oid
-			return nil
-		})
-	} else if totalSellXCH[model.ExchangeTypeHu].IsPositive() {
-		eg.Go(func() error {
-			oid, err := h.Sell(bidPrices[model.ExchangeTypeHu], totalSellXCH[model.ExchangeTypeHu])
-			if err != nil {
-				return fmt.Errorf("h sell: %w", err)
-			}
-			hOrderID = oid
 			return nil
 		})
 	}
