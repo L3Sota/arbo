@@ -25,6 +25,10 @@ var (
 		"connection reset by peer",
 		"unexpected EOF",
 	}
+
+	tradeFailure = []string{
+		"trade(s) not filled",
+	}
 )
 
 func oneoff() {
@@ -72,18 +76,25 @@ func repeat() {
 		fmt.Println("arb at", time.Now().String())
 		gatherBalances, msgs, err = arb.Book(gatherBalances, conf)
 		if err != nil {
-			nonfatal := false
+			wait := time.Duration(0)
 			for _, e := range nonfatalErrors {
 				if strings.Contains(err.Error(), e) {
-					nonfatal = true
+					wait = time.Minute
+					break
 				}
 			}
-			if nonfatal {
+			for _, e := range tradeFailure {
+				if strings.Contains(err.Error(), e) {
+					wait = 5 * time.Second
+					break
+				}
+			}
+			if wait != time.Duration(0) {
 				select {
 				case t := <-deadline.C:
 					fmt.Println("deadline reached, ending at", t.String())
 					return
-				case <-time.After(waitMultiplier * time.Minute):
+				case <-time.After(waitMultiplier * wait):
 					waitMultiplier++
 					ticker.Reset(tick)
 					continue

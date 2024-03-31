@@ -2,6 +2,7 @@ package arb
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -228,8 +229,9 @@ func GatherBalancesP(conf *config.Config) (m [model.ExchangeTypeMax]model.Balanc
 func Book(gatherBalances bool, conf *config.Config) (bool, []string, error) {
 	messages := make([]string, 0, 2)
 	var (
-		msg    string
-		traded bool
+		msg       string
+		traded    bool
+		someError error
 	)
 
 	if gatherBalances {
@@ -304,6 +306,7 @@ func Book(gatherBalances bool, conf *config.Config) (bool, []string, error) {
 				trades = append(trades, "(skipped: below min order threshold)")
 			}
 			trades = append(trades, fmt.Sprintf(profitTemplate, sigfigs(profit)))
+			filled := true
 			for e, b := range totalBuyXCH {
 				if b.IsPositive() {
 					trades = append(trades, fmt.Sprintf(buyTemplate, model.ExchangeType(e).String(), sigfigs(totalBuyUSDT[e]), sigfigs(b), sigfigs(as.LastPrice[e])))
@@ -345,18 +348,27 @@ func Book(gatherBalances bool, conf *config.Config) (bool, []string, error) {
 					case int(model.ExchangeTypeKu):
 						if kOrder != nil {
 							trades = append(trades, fmt.Sprintf("(%v) fill: $%v, ¢%v; fee: $%v; full?: %t", model.ExchangeTypeKu.String(), kOrder.DealFunds, kOrder.DealSize, kOrder.Fee, !kOrder.IsActive))
+							if kOrder.IsActive {
+								filled = false
+							}
 						} else {
 							trades = append(trades, fmt.Sprintf("(%v) nil", model.ExchangeTypeKu.String()))
 						}
 					case int(model.ExchangeTypeHu):
 						if hOrder != nil {
 							trades = append(trades, fmt.Sprintf("(%v) fill: $%v, ¢%v; fee: $%v; state: %v", model.ExchangeTypeHu.String(), hOrder.Data.FilledCashAmount, hOrder.Data.FilledAmount, hOrder.Data.FilledFees, hOrder.Data.State))
+							if hOrder.Data.State != "filled" {
+								filled = false
+							}
 						} else {
 							trades = append(trades, fmt.Sprintf("(%v) nil", model.ExchangeTypeHu.String()))
 						}
 					case int(model.ExchangeTypeCo):
 						if cOrder != nil {
 							trades = append(trades, fmt.Sprintf("(%v) fill: $%v, ¢%v; fee: $%v; status: %v", model.ExchangeTypeCo.String(), cOrder.Order.DealMoney, cOrder.Order.DealAmount, cOrder.Order.DealFee, cOrder.Order.Status))
+							if cOrder.Order.Status != "done" {
+								filled = false
+							}
 						} else {
 							trades = append(trades, fmt.Sprintf("(%v) nil", model.ExchangeTypeCo.String()))
 
@@ -364,6 +376,9 @@ func Book(gatherBalances bool, conf *config.Config) (bool, []string, error) {
 					case int(model.ExchangeTypeGa):
 						if gOrder != nil {
 							trades = append(trades, fmt.Sprintf("(%v) fill: $%v; fee: $%v; status: %v", model.ExchangeTypeGa.String(), gOrder.FilledTotal, gOrder.Fee, gOrder.Status))
+							if gOrder.Status != "closed" {
+								filled = false
+							}
 						} else {
 							trades = append(trades, fmt.Sprintf("(%v) nil", model.ExchangeTypeGa.String()))
 						}
@@ -374,6 +389,10 @@ func Book(gatherBalances bool, conf *config.Config) (bool, []string, error) {
 
 			msg = strings.Join(trades, "\n")
 			messages = append(messages, msg)
+
+			if !filled {
+				someError = errors.New("trade(s) not filled")
+			}
 		}
 	}
 
@@ -435,7 +454,7 @@ func Book(gatherBalances bool, conf *config.Config) (bool, []string, error) {
 		}
 	}
 
-	return traded, messages, nil
+	return traded, messages, someError
 }
 
 func arbo(a, b []model.Order, balances [model.ExchangeTypeMax]model.Balances, c *config.Config) (side, side, decimal.Decimal, decimal.Decimal, decimal.Decimal, decimal.Decimal, decimal.Decimal, [model.ExchangeTypeMax]decimal.Decimal, [model.ExchangeTypeMax]decimal.Decimal, [model.ExchangeTypeMax]decimal.Decimal, [model.ExchangeTypeMax]decimal.Decimal) {
