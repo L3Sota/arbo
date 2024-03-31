@@ -23,6 +23,7 @@ var (
 		"IP Address",
 		"ip address",
 		"connection reset by peer",
+		"unexpected EOF",
 	}
 )
 
