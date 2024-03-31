@@ -67,7 +67,7 @@ var (
 		decimal.RequireFromString("0.1"),
 		decimal.NewFromInt(10),
 		decimal.Zero,
-		decimal.NewFromInt(1),
+		decimal.NewFromInt(3),
 	}
 	XCHMinSizes = [model.ExchangeTypeMax]decimal.Decimal{
 		decimal.Zero,
